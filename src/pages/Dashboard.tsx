@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Users, Calendar, Heart, Package, Plus, Clock, Activity } from "lucide-react";
+import { Users, Calendar, Heart, Package, Plus, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -62,12 +62,22 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col gap-2"
         >
-          <h1 className="font-display text-2xl md:text-3xl font-semibold text-foreground">
-            Welcome back, <span className="text-gradient">Dr. Admin</span>
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Here's what's happening at your Ayurvedic center today
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+              <Heart className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">
+              AMC - PANCHAKARMA APP
+            </h1>
+          </div>
+          <div className="mt-2">
+            <p className="font-display text-lg md:text-xl font-semibold text-foreground">
+              Welcome back, <span className="text-gradient">Dr. Admin</span>
+            </p>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Here's what's happening at your Ayurvedic center today
+            </p>
+          </div>
         </motion.div>
 
         {/* Stats Grid */}
@@ -151,16 +161,6 @@ export default function Dashboard() {
               <Clock className="w-4 h-4" />
               <span className="hidden sm:inline">Schedule Therapy</span>
               <span className="sm:hidden">Schedule</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleQuickAction("prakriti-assessment")}
-              className="flex items-center gap-2 px-4 md:px-5 py-2.5 bg-highlight text-highlight-foreground rounded-xl font-medium text-sm hover:bg-highlight/90 transition-colors"
-            >
-              <Activity className="w-4 h-4" />
-              <span className="hidden sm:inline">Prakriti Assessment</span>
-              <span className="sm:hidden">Prakriti</span>
             </motion.button>
           </div>
         </motion.div>

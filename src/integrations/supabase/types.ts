@@ -129,36 +129,66 @@ export type Database = {
       }
       patients: {
         Row: {
+          abha_id: string | null
           address: string | null
           age: number
           blood_group: string | null
+          chief_complaint: string | null
           contact: string
           created_at: string
+          education: string | null
           gender: string
           id: string
+          ipd_no: string | null
           name: string
+          occupation: string | null
+          opd_no: string | null
+          registration_date: string | null
+          resident_status: string | null
+          serial_no: string | null
+          socio_economic_status: string | null
           updated_at: string
         }
         Insert: {
+          abha_id?: string | null
           address?: string | null
           age: number
           blood_group?: string | null
+          chief_complaint?: string | null
           contact: string
           created_at?: string
+          education?: string | null
           gender: string
           id?: string
+          ipd_no?: string | null
           name: string
+          occupation?: string | null
+          opd_no?: string | null
+          registration_date?: string | null
+          resident_status?: string | null
+          serial_no?: string | null
+          socio_economic_status?: string | null
           updated_at?: string
         }
         Update: {
+          abha_id?: string | null
           address?: string | null
           age?: number
           blood_group?: string | null
+          chief_complaint?: string | null
           contact?: string
           created_at?: string
+          education?: string | null
           gender?: string
           id?: string
+          ipd_no?: string | null
           name?: string
+          occupation?: string | null
+          opd_no?: string | null
+          registration_date?: string | null
+          resident_status?: string | null
+          serial_no?: string | null
+          socio_economic_status?: string | null
           updated_at?: string
         }
         Relationships: []
