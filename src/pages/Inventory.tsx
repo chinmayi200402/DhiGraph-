@@ -4,28 +4,22 @@ import { Package, Search, AlertTriangle, TrendingDown, Filter } from "lucide-rea
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Minus, Plus, RefreshCw } from "lucide-react";
 
 interface InventoryItem {
-  id: number;
-  name: string;
-  category: "Tailam" | "Churna" | "Kashayam" | "Gulika" | "Arishtam";
-  stock: number;
+  _id: string;
+  item_name: string;
+  category: "Tailam" | "Churna" | "Kashayam" | "Gulika" | "Arishtam" | string;
+  quantity: number;
+  min_stock_level: number;
   unit: string;
-  lastRestocked: string;
+  last_restocked_at: string;
+  createdAt: string;
 }
 
-const inventoryItems: InventoryItem[] = [
-  { id: 1, name: "Dhanwantaram Tailam", category: "Tailam", stock: 8, unit: "liters", lastRestocked: "2024-01-05" },
-  { id: 2, name: "Ksheerabala Tailam", category: "Tailam", stock: 45, unit: "liters", lastRestocked: "2024-01-10" },
-  { id: 3, name: "Mahamasha Tailam", category: "Tailam", stock: 28, unit: "liters", lastRestocked: "2024-01-08" },
-  { id: 4, name: "Triphala Churna", category: "Churna", stock: 5, unit: "kg", lastRestocked: "2024-01-03" },
-  { id: 5, name: "Ashwagandha Churna", category: "Churna", stock: 72, unit: "kg", lastRestocked: "2024-01-12" },
-  { id: 6, name: "Trikatu Churna", category: "Churna", stock: 35, unit: "kg", lastRestocked: "2024-01-07" },
-  { id: 7, name: "Dasamoola Kashayam", category: "Kashayam", stock: 62, unit: "liters", lastRestocked: "2024-01-09" },
-  { id: 8, name: "Rasnadi Kashayam", category: "Kashayam", stock: 12, unit: "liters", lastRestocked: "2024-01-04" },
-  { id: 9, name: "Brahmi Gulika", category: "Gulika", stock: 88, unit: "bottles", lastRestocked: "2024-01-11" },
-  { id: 10, name: "Dasamoolarishtam", category: "Arishtam", stock: 55, unit: "liters", lastRestocked: "2024-01-06" },
-];
+// Replaced with dynamic fetch using useQuery
 
 const categoryColors = {
   Tailam: "bg-accent/20 text-accent border-accent/30",
@@ -39,29 +33,76 @@ export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
-  const categories = ["All", ...new Set(inventoryItems.map(item => item.category))];
+  const queryClient = useQueryClient();
 
-  const filteredItems = inventoryItems.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const { data: inventoryItems = [], isLoading } = useQuery({
+    queryKey: ["inventory"],
+    queryFn: async () => {
+      const res = await fetch("http://localhost:5000/api/inventory");
+      if (!res.ok) throw new Error("Failed to load inventory");
+      return res.json() as Promise<InventoryItem[]>;
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, quantity }: { id: string, quantity: number }) => {
+      const res = await fetch(`http://localhost:5000/api/inventory/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity })
+      });
+      if (!res.ok) throw new Error("Update failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    }
+  });
+
+  const seedMutation = useMutation({
+    mutationFn: async () => {
+      // Seed some dynamic data for the DB if completely empty
+      const items = [
+        { item_name: "Dhanwantaram Tailam", category: "Tailam", quantity: 8, min_stock_level: 15, unit: "liters" },
+        { item_name: "Ksheerabala Tailam", category: "Tailam", quantity: 45, min_stock_level: 15, unit: "liters" },
+        { item_name: "Ashwagandha Churna", category: "Churna", quantity: 72, min_stock_level: 30, unit: "kg" }
+      ];
+      for (const item of items) {
+        await fetch("http://localhost:5000/api/inventory", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item)
+        });
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["inventory"] })
+  });
+
+  const categories = ["All", ...new Set(inventoryItems.map((item: any) => item.category))];
+
+  const filteredItems = inventoryItems.filter((item: any) => {
+    const itemName = item.item_name || item.name || '';
+    const matchesSearch = itemName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const lowStockItems = inventoryItems.filter(item => item.stock < 15);
+  const lowStockItems = inventoryItems.filter((item: any) => item.quantity < item.min_stock_level);
   const totalItems = inventoryItems.length;
-  const healthyStock = inventoryItems.filter(item => item.stock >= 50).length;
+  // A healthy stock is double the min_stock_level for now
+  const healthyStock = inventoryItems.filter((item: any) => item.quantity >= (item.min_stock_level * 2)).length;
 
-  const getStockColor = (stock: number) => {
-    if (stock < 10) return "bg-destructive";
-    if (stock < 25) return "bg-highlight";
-    if (stock < 50) return "bg-accent";
+  const getStockColor = (quantity: number, minStock: number) => {
+    if (quantity <= minStock) return "bg-destructive";
+    if (quantity <= minStock * 1.5) return "bg-highlight";
+    if (quantity <= minStock * 2) return "bg-accent";
     return "bg-primary";
   };
 
-  const getStockLabel = (stock: number) => {
-    if (stock < 10) return "Critical";
-    if (stock < 25) return "Low";
-    if (stock < 50) return "Moderate";
+  const getStockLabel = (quantity: number, minStock: number) => {
+    if (quantity <= minStock) return "Critical";
+    if (quantity <= minStock * 1.5) return "Low";
+    if (quantity <= minStock * 2) return "Moderate";
     return "Good";
   };
 
@@ -72,13 +113,22 @@ export default function Inventory() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="flex justify-between items-center"
         >
-          <h1 className="font-display text-3xl font-semibold text-foreground">
-            Inventory Management
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Monitor and manage Ayurvedic medicines and supplies
-          </p>
+          <div>
+            <h1 className="font-display text-3xl font-semibold text-foreground">
+              Inventory Management
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Monitor and manage Ayurvedic medicines and supplies
+            </p>
+          </div>
+          {inventoryItems.length === 0 && !isLoading && (
+            <Button onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${seedMutation.isPending ? 'animate-spin' : ''}`} />
+              Seed Database Data
+            </Button>
+          )}
         </motion.div>
 
         {/* Stats */}
@@ -127,7 +177,7 @@ export default function Inventory() {
                 <AlertTriangle className="w-5 h-5 text-destructive" />
               </div>
               <div>
-                <p className="text-2xl font-display font-bold">{inventoryItems.filter(i => i.stock < 10).length}</p>
+                <p className="text-2xl font-display font-bold">{lowStockItems.length}</p>
                 <p className="text-xs text-muted-foreground">Critical</p>
               </div>
             </div>
@@ -147,16 +197,19 @@ export default function Inventory() {
               <h3 className="font-semibold text-destructive">Low Stock Alert</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {lowStockItems.map((item) => (
+              {lowStockItems.map((item: any) => (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className="bg-background rounded-xl p-3 flex items-center justify-between"
                 >
-                  <div>
-                    <p className="font-medium text-sm">{item.name}</p>
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{item.item_name || item.name}</p>
                     <p className="text-xs text-muted-foreground">{item.category}</p>
                   </div>
-                  <span className="text-sm font-bold text-destructive">{item.stock}%</span>
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-destructive">{item.quantity}</span>
+                    <p className="text-xs text-muted-foreground">min: {item.min_stock_level}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -190,7 +243,7 @@ export default function Inventory() {
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
-                {cat}
+                {String(cat)}
               </button>
             ))}
           </div>
@@ -215,9 +268,23 @@ export default function Inventory() {
                 </tr>
               </thead>
               <tbody>
-                {filteredItems.map((item, index) => (
+                {isLoading && (
+                  <tr>
+                    <td colSpan={5} className="p-4 text-center text-muted-foreground">
+                      Loading inventory...
+                    </td>
+                  </tr>
+                )}
+                {!isLoading && filteredItems.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-4 text-center text-muted-foreground">
+                      No inventory items found
+                    </td>
+                  </tr>
+                )}
+                {filteredItems.map((item: any, index: number) => (
                   <motion.tr
-                    key={item.id}
+                    key={item._id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 + index * 0.03 }}
@@ -228,13 +295,13 @@ export default function Inventory() {
                         <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
                           <Package className="w-4 h-4 text-muted-foreground" />
                         </div>
-                        <span className="font-medium">{item.name}</span>
+                        <span className="font-medium">{item.item_name || item.name}</span>
                       </div>
                     </td>
                     <td className="p-4">
                       <span
                         className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${
-                          categoryColors[item.category]
+                          categoryColors[item.category as keyof typeof categoryColors] || "bg-muted text-muted-foreground border-border"
                         }`}
                       >
                         {item.category}
@@ -243,31 +310,52 @@ export default function Inventory() {
                     <td className="p-4 w-48">
                       <div className="space-y-1">
                         <Progress
-                          value={item.stock}
-                          className={`h-2 [&>div]:${getStockColor(item.stock)}`}
+                          value={Math.min(100, (item.quantity / (item.min_stock_level * 3)) * 100)}
+                          className={`h-2 [&>div]:${getStockColor(item.quantity, item.min_stock_level)}`}
                         />
                         <p className="text-xs text-muted-foreground">
-                          {item.stock}% ({item.unit})
+                          {item.quantity} {item.unit}
                         </p>
                       </div>
                     </td>
                     <td className="p-4">
-                      <span
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                          item.stock < 10
-                            ? "bg-destructive/20 text-destructive"
-                            : item.stock < 25
-                            ? "bg-highlight/20 text-highlight"
-                            : item.stock < 50
-                            ? "bg-accent/20 text-accent"
-                            : "bg-primary/20 text-primary"
-                        }`}
-                      >
-                        {getStockLabel(item.stock)}
-                      </span>
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium flex-1 text-center ${
+                            item.quantity <= item.min_stock_level
+                              ? "bg-destructive/20 text-destructive"
+                              : item.quantity <= item.min_stock_level * 1.5
+                              ? "bg-highlight/20 text-highlight"
+                              : item.quantity <= item.min_stock_level * 2
+                              ? "bg-accent/20 text-accent"
+                              : "bg-primary/20 text-primary"
+                          }`}
+                        >
+                          {getStockLabel(item.quantity, item.min_stock_level)}
+                        </span>
+                        
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            className="w-7 h-7"
+                            onClick={() => updateMutation.mutate({ id: item._id, quantity: Math.max(0, item.quantity - 1) })}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            className="w-7 h-7"
+                            onClick={() => updateMutation.mutate({ id: item._id, quantity: item.quantity + 1 })}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
                     </td>
                     <td className="p-4 text-sm text-muted-foreground">
-                      {new Date(item.lastRestocked).toLocaleDateString('en-US', {
+                      {new Date(item.last_restocked_at || item.createdAt || new Date()).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',

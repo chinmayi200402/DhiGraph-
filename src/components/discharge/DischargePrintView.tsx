@@ -1,4 +1,4 @@
-import { Check, Leaf } from "lucide-react";
+import { Check, Brain } from "lucide-react";
 import {
   Radar,
   RadarChart,
@@ -65,19 +65,22 @@ export function DischargePrintView({ patient }: DischargePrintViewProps) {
   return (
     <div className="bg-white p-8 max-w-[800px] mx-auto" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Header */}
-      <div className="text-center border-b-2 border-[#2D5A27] pb-6 mb-6">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#B87333] flex items-center justify-center">
-            <Leaf className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 style={{ fontFamily: "'Playfair Display', serif" }} className="text-3xl font-bold text-[#2D5A27]">
-              AYURSUTRA
-            </h1>
-            <p className="text-sm text-[#8B5E3C]">Ayurvedic Hospital & Panchakarma Center</p>
-          </div>
+      <div className="flex flex-col items-center text-center border-b-2 border-[#2D5A27] pb-6 mb-6">
+        <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-lg overflow-hidden border border-[#2D5A27]/20 shrink-0 mb-4 mt-2">
+          <img src="/logo.png" alt="AMC Logo" className="w-full h-full object-cover" />
         </div>
-        <h2 style={{ fontFamily: "'Playfair Display', serif" }} className="text-xl font-semibold text-[#2D5A27] mt-4">
+        
+        <h1 style={{ fontFamily: "'Playfair Display', serif" }} className="text-2xl font-bold text-[#2D5A27] leading-tight">
+          Adichunchanagiri Ayurveda Medical College
+        </h1>
+        <p className="text-md font-semibold text-[#8B5E3C] mt-1.5 mb-1">Hospital & Research Centre</p>
+        
+        <div className="flex items-center justify-center gap-2 mt-4 pt-3 border-t border-[#2D5A27]/20 w-64">
+          <Brain className="w-5 h-5 text-[#2D5A27]" />
+          <span className="text-[11px] uppercase font-extrabold tracking-widest text-[#2D5A27] drop-shadow-sm">Powered by DhiGraph</span>
+        </div>
+        
+        <h2 style={{ fontFamily: "'Playfair Display', serif" }} className="text-xl font-semibold text-[#2D5A27] mt-5 tracking-wide">
           DISCHARGE SUMMARY
         </h2>
       </div>
@@ -264,14 +267,14 @@ export function DischargePrintView({ patient }: DischargePrintViewProps) {
         <div className="text-center">
           <div className="h-16 border-b border-[#8B5E3C]/50 mb-2"></div>
           <p className="text-sm font-medium">Medical Superintendent</p>
-          <p className="text-xs text-[#8B5E3C]">Ayursutra Hospital</p>
+          <p className="text-xs text-[#8B5E3C]">AAMCHRC</p>
         </div>
       </div>
 
       {/* Footer */}
       <div className="mt-8 pt-4 border-t border-[#2D5A27]/20 text-center text-xs text-[#8B5E3C]">
-        <p>This is a computer-generated discharge summary from Ayursutra Hospital Management System.</p>
-        <p className="mt-1">For any queries, please contact: info@ayursutra.com | +91 1234 567890</p>
+        <p>This is a computer-generated discharge summary from DhiGraph Clinical System.</p>
+        <p className="mt-1">For any queries, please contact: info@aamchrc.org | +91 1234 567890</p>
       </div>
     </div>
   );

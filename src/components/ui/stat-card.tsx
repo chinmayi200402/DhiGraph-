@@ -13,6 +13,7 @@ interface StatCardProps {
   };
   variant?: "default" | "primary" | "accent" | "highlight";
   delay?: number;
+  onClick?: () => void;
 }
 
 const variants = {
@@ -37,6 +38,7 @@ export function StatCard({
   trend,
   variant = "default",
   delay = 0,
+  onClick,
 }: StatCardProps) {
   return (
     <motion.div
@@ -44,8 +46,10 @@ export function StatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
       whileHover={{ y: -4 }}
+      onClick={onClick}
       className={cn(
         "relative p-4 md:p-6 rounded-2xl border backdrop-blur-sm shadow-sm hover:shadow-lg transition-shadow",
+        onClick && "cursor-pointer",
         variants[variant]
       )}
     >

@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { Clock, MapPin, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 export function TodaySchedule() {
   const navigate = useNavigate();
@@ -11,22 +10,14 @@ export function TodaySchedule() {
     queryKey: ["today-appointments"],
     queryFn: async () => {
       const today = new Date().toISOString().split("T")[0];
-      
-      const { data, error } = await supabase
-        .from("appointments")
-        .select(`
-          *,
-          patients (name),
-          therapies (name, duration_minutes),
-          therapists (name),
-          rooms (room_number)
-        `)
-        .eq("date", today)
-        .order("start_time", { ascending: true })
-        .limit(4);
-      
-      if (error) throw error;
-      return data || [];
+      const res = await fetch(
+        `http://localhost:5000/api/appointments?date=${encodeURIComponent(today)}`
+      );
+      if (!res.ok) {
+        throw new Error("Failed to load today's appointments");
+      }
+      const data = await res.json();
+      return (data || []).slice(0, 4);
     },
   });
 
@@ -87,16 +78,18 @@ export function TodaySchedule() {
             >
               {/* Timeline dot */}
               <div className="absolute left-0 top-0 -translate-x-1/2 w-2.5 md:w-3 h-2.5 md:h-3 rounded-full bg-primary ring-4 ring-background" />
-              
+
               <div className="bg-muted/30 rounded-xl p-3 md:p-4 hover:bg-muted/50 transition-colors">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-foreground text-sm md:text-base truncate">
-                      {item.therapies?.name || "Unknown Therapy"}
+                      {item.therapy_id?.name || "Unknown Therapy"}
                     </p>
                     <div className="flex items-center gap-1 text-xs md:text-sm text-muted-foreground mt-1">
                       <User className="w-3 h-3 flex-shrink-0" />
-                      <span className="truncate">{item.patients?.name || "Unknown Patient"}</span>
+                      <span className="truncate">
+                        {item.patient_id?.name || "Unknown Patient"}
+                      </span>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -104,16 +97,18 @@ export function TodaySchedule() {
                       {item.start_time?.slice(0, 5)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {item.therapies?.duration_minutes || 60} min
+                      {item.therapy_id?.duration_minutes || 60} min
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 md:gap-4 text-xs text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
-                    Room {item.rooms?.room_number || "N/A"}
+                    Room {item.room_id?.room_number || "N/A"}
                   </span>
-                  <span className="hidden sm:inline">{item.therapists?.name || "Unassigned"}</span>
+                  <span className="hidden sm:inline">
+                    {item.therapist_id?.name || "Unassigned"}
+                  </span>
                 </div>
               </div>
             </motion.div>

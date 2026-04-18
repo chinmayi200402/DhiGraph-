@@ -2,30 +2,24 @@ import { motion } from "framer-motion";
 import { Clock, User, MapPin, CheckCircle2, Circle } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 
+import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+
 interface ScheduleItem {
-  id: number;
+  _id: string;
   time: string;
   endTime: string;
-  therapy: string;
-  patient: string;
-  room: string;
-  therapist: string;
-  status: "completed" | "in-progress" | "upcoming";
+  therapy: { name: string };
+  patient: { name: string };
+  room: { name: string };
+  therapist: { name: string };
+  status: "Completed" | "In Progress" | "Scheduled" | "Cancelled";
 }
 
-const scheduleItems: ScheduleItem[] = [
-  { id: 1, time: "08:00", endTime: "09:00", therapy: "Abhyanga", patient: "Rajesh Kumar", room: "Room 101", therapist: "Dr. Anil", status: "completed" },
-  { id: 2, time: "09:00", endTime: "09:45", therapy: "Shirodhara", patient: "Priya Sharma", room: "Room 102", therapist: "Dr. Meera", status: "completed" },
-  { id: 3, time: "09:30", endTime: "10:00", therapy: "Nasya", patient: "Sunita Devi", room: "Room 103", therapist: "Dr. Priya", status: "in-progress" },
-  { id: 4, time: "10:30", endTime: "12:00", therapy: "Basti", patient: "Amit Verma", room: "Room 101", therapist: "Dr. Rajan", status: "upcoming" },
-  { id: 5, time: "11:00", endTime: "12:00", therapy: "Udvartana", patient: "Vikram Singh", room: "Room 102", therapist: "Dr. Anil", status: "upcoming" },
-  { id: 6, time: "14:00", endTime: "14:45", therapy: "Swedana", patient: "Rajesh Kumar", room: "Room 103", therapist: "Dr. Meera", status: "upcoming" },
-  { id: 7, time: "15:00", endTime: "16:00", therapy: "Abhyanga", patient: "Priya Sharma", room: "Room 101", therapist: "Dr. Priya", status: "upcoming" },
-  { id: 8, time: "16:30", endTime: "17:15", therapy: "Shirodhara", patient: "Sunita Devi", room: "Room 102", therapist: "Dr. Rajan", status: "upcoming" },
-];
+// Replaced with dynamic fetch
 
-const statusStyles = {
-  completed: {
+const statusStyles: Record<string, { bg: string, border: string, icon: any, iconColor: string, label: string, labelBg: string }> = {
+  "Completed": {
     bg: "bg-primary/10",
     border: "border-primary/30",
     icon: CheckCircle2,
@@ -33,7 +27,7 @@ const statusStyles = {
     label: "Completed",
     labelBg: "bg-primary/20 text-primary",
   },
-  "in-progress": {
+  "In Progress": {
     bg: "bg-highlight/10",
     border: "border-highlight/30",
     icon: Clock,
@@ -41,13 +35,21 @@ const statusStyles = {
     label: "In Progress",
     labelBg: "bg-highlight/20 text-highlight",
   },
-  upcoming: {
+  "Scheduled": {
     bg: "bg-muted/50",
     border: "border-border",
     icon: Circle,
     iconColor: "text-muted-foreground",
-    label: "Upcoming",
+    label: "Scheduled",
     labelBg: "bg-muted text-muted-foreground",
+  },
+  "Cancelled": {
+    bg: "bg-destructive/10",
+    border: "border-destructive/30",
+    icon: Circle,
+    iconColor: "text-destructive",
+    label: "Cancelled",
+    labelBg: "bg-destructive/20 text-destructive",
   },
 };
 
@@ -61,8 +63,35 @@ export default function DailySchedule() {
     day: 'numeric' 
   });
 
-  const groupedByRoom = rooms.reduce((acc, room) => {
-    acc[room] = scheduleItems.filter(item => item.room === room);
+  const { data: scheduleItems = [], isLoading } = useQuery({
+    queryKey: ["appointments", "today"],
+    queryFn: async () => {
+      const res = await fetch("http://localhost:5000/api/appointments");
+      if (!res.ok) throw new Error("Failed to load appointments");
+      
+      const allAppts: any[] = await res.json();
+      
+      // Filter for today
+      const _today = new Date();
+      return allAppts.filter(appt => {
+        const apptDate = new Date(appt.date);
+        return apptDate.getDate() === _today.getDate() && apptDate.getMonth() === _today.getMonth();
+      }).map(appt => ({
+        ...appt,
+        time: appt.start_time,
+        endTime: appt.end_time,
+        patient: appt.patient_id,
+        therapy: appt.therapy_id,
+        room: appt.room_id,
+        therapist: appt.therapist_id,
+      }));
+    },
+  });
+
+  const activeRooms = Array.from(new Set(scheduleItems.map((i: any) => i.room?.name || 'Unassigned Room')));
+
+  const groupedByRoom = activeRooms.reduce((acc, room) => {
+    acc[room] = scheduleItems.filter((item: any) => (item.room?.name || 'Unassigned Room') === room);
     return acc;
   }, {} as Record<string, ScheduleItem[]>);
 
@@ -102,27 +131,29 @@ export default function DailySchedule() {
         >
           <div className="bg-card rounded-2xl border border-border p-4 text-center">
             <p className="text-3xl font-display font-bold text-primary">
-              {scheduleItems.filter(i => i.status === "completed").length}
+              {scheduleItems.filter((i: any) => i.status === "Completed").length}
             </p>
             <p className="text-sm text-muted-foreground">Completed</p>
           </div>
           <div className="bg-card rounded-2xl border border-border p-4 text-center">
             <p className="text-3xl font-display font-bold text-highlight">
-              {scheduleItems.filter(i => i.status === "in-progress").length}
+              {scheduleItems.filter((i: any) => i.status === "In Progress").length}
             </p>
             <p className="text-sm text-muted-foreground">In Progress</p>
           </div>
           <div className="bg-card rounded-2xl border border-border p-4 text-center">
             <p className="text-3xl font-display font-bold text-muted-foreground">
-              {scheduleItems.filter(i => i.status === "upcoming").length}
+              {scheduleItems.filter((i: any) => i.status === "Scheduled").length}
             </p>
-            <p className="text-sm text-muted-foreground">Upcoming</p>
+            <p className="text-sm text-muted-foreground">Scheduled</p>
           </div>
         </motion.div>
 
         {/* Room-wise Schedule */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {rooms.map((room, roomIndex) => (
+          {isLoading && <p>Loading appointments for today...</p>}
+          {!isLoading && activeRooms.length === 0 && <p className="col-span-full text-center text-muted-foreground">No appointments currently scheduled for today.</p>}
+          {activeRooms.map((room, roomIndex) => (
             <motion.div
               key={room}
               initial={{ opacity: 0, y: 20 }}
@@ -146,13 +177,13 @@ export default function DailySchedule() {
                     No appointments
                   </p>
                 ) : (
-                  groupedByRoom[room].map((item, index) => {
-                    const style = statusStyles[item.status];
+                  groupedByRoom[room].map((item: any, index) => {
+                    const style = statusStyles[(item.status as keyof typeof statusStyles)] || statusStyles["Scheduled"];
                     const Icon = style.icon;
 
                     return (
                       <motion.div
-                        key={item.id}
+                        key={item._id}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.3 + index * 0.05 }}
@@ -160,7 +191,7 @@ export default function DailySchedule() {
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <p className="font-semibold text-foreground">{item.therapy}</p>
+                            <p className="font-semibold text-foreground">{item.therapy?.name || 'Unknown Therapy'}</p>
                             <p className="text-xs text-muted-foreground">
                               {item.time} - {item.endTime}
                             </p>
@@ -170,11 +201,11 @@ export default function DailySchedule() {
                         <div className="space-y-1 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1.5">
                             <User className="w-3 h-3" />
-                            {item.patient}
+                            {item.patient?.name || 'Unknown'}
                           </div>
                           <div className="flex items-center gap-1.5">
                             <Clock className="w-3 h-3" />
-                            {item.therapist}
+                            {item.therapist?.name || 'Unknown'}
                           </div>
                         </div>
                       </motion.div>
@@ -199,13 +230,13 @@ export default function DailySchedule() {
             <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
 
             <div className="space-y-4">
-              {scheduleItems.map((item, index) => {
-                const style = statusStyles[item.status];
+              {scheduleItems.map((item: any, index: number) => {
+                const style = statusStyles[item.status as keyof typeof statusStyles] || statusStyles["Scheduled"];
                 const Icon = style.icon;
 
                 return (
                   <motion.div
-                    key={item.id}
+                    key={item._id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 + index * 0.05 }}
@@ -219,12 +250,12 @@ export default function DailySchedule() {
                     <div className={`flex-1 p-4 rounded-xl ${style.bg} border ${style.border}`}>
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="font-semibold text-foreground">{item.therapy}</p>
-                          <p className="text-sm text-muted-foreground">{item.patient}</p>
+                          <p className="font-semibold text-foreground">{item.therapy?.name || 'Unknown'}</p>
+                          <p className="text-sm text-muted-foreground">{item.patient?.name || 'Unknown'}</p>
                         </div>
                         <div className="text-right">
                           <p className="font-medium text-sm">{item.time}</p>
-                          <p className="text-xs text-muted-foreground">{item.room}</p>
+                          <p className="text-xs text-muted-foreground">{item.room?.name || 'No Room'}</p>
                         </div>
                       </div>
                     </div>

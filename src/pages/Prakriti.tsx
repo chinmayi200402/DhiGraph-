@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { PrakritiChart } from "@/components/prakriti/PrakritiChart";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Option {
@@ -364,17 +363,24 @@ export default function Prakriti() {
         }
       });
 
-      const { error } = await supabase
-        .from("prakriti_assessments")
-        .insert({
+      const res = await fetch("http://localhost:5000/api/prakriti", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           patient_id: patientId,
           vata_score: scores.vataCount,
           pitta_score: scores.pittaCount,
           kapha_score: scores.kaphaCount,
           responses: responses,
-        });
+        }),
+      });
 
-      if (error) throw error;
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => ({}));
+        throw new Error(errorBody.message || "Failed to save assessment");
+      }
 
       setIsSaved(true);
       toast.success("Prakriti assessment saved to patient profile!");

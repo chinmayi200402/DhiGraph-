@@ -1,41 +1,35 @@
 import { motion } from "framer-motion";
 import { Users, Calendar, Heart, Package, Plus, Clock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { StatCard } from "@/components/ui/stat-card";
 import { RecentPatients } from "@/components/dashboard/RecentPatients";
 import { TodaySchedule } from "@/components/dashboard/TodaySchedule";
 import { InventoryAlert } from "@/components/dashboard/InventoryAlert";
-import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const userName = location.state?.name || "User";
+  const userRole = location.state?.role || "admin";
+
+  const displayName = userRole === "doctor" ? `Dr. ${userName}` : userName;
 
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
-      const [patients, appointments, inventory] = await Promise.all([
-        supabase.from("patients").select("id", { count: "exact" }),
-        supabase.from("appointments").select("id, status").eq("date", new Date().toISOString().split("T")[0]),
-        supabase.from("inventory").select("id, quantity, min_stock_level"),
-      ]);
-
-      const lowStockCount = (inventory.data || []).filter(
-        item => item.quantity < item.min_stock_level
-      ).length;
-
-      const completedToday = (appointments.data || []).filter(
-        a => a.status === "Completed"
-      ).length;
-
-      return {
-        totalPatients: patients.count || 0,
-        todayAppointments: appointments.data?.length || 0,
-        completedToday,
-        inventoryItems: inventory.data?.length || 0,
-        lowStockAlerts: lowStockCount,
-      };
+      const res = await fetch("http://localhost:5000/api/dashboard/stats");
+      if (!res.ok) {
+        throw new Error("Failed to load dashboard stats");
+      }
+      return res.json() as Promise<{
+        totalPatients: number;
+        todayAppointments: number;
+        completedToday: number;
+        inventoryItems: number;
+        lowStockAlerts: number;
+      }>;
     },
   });
 
@@ -60,19 +54,27 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-2"
+          className="flex flex-col items-center justify-center gap-4 text-center mb-6"
         >
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Heart className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">
-              AMC - PANCHAKARMA APP
+          <div className="flex flex-col items-center gap-4">
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+              className="h-32 w-32 rounded-full overflow-hidden bg-white shadow-xl border-4 border-white/80 shrink-0"
+            >
+              <img 
+                src="/logo.png" 
+                alt="Adichunchanagiri Ayurvedic Medical College Logo" 
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
+            <h1 className="font-display text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-highlight drop-shadow-sm px-4 max-w-4xl leading-tight">
+              Adichunchanagiri Ayurvedic Medical College Hospital & Research Centre
             </h1>
           </div>
           <div className="mt-2">
             <p className="font-display text-lg md:text-xl font-semibold text-foreground">
-              Welcome back, <span className="text-gradient">Dr. Admin</span>
+              Welcome back, <span className="text-gradient">{displayName}</span>
             </p>
             <p className="text-sm md:text-base text-muted-foreground">
               Here's what's happening at your Ayurvedic center today
@@ -85,10 +87,11 @@ export default function Dashboard() {
           <StatCard
             title="Total Patients"
             value={stats?.totalPatients || 0}
-            subtitle="Active patients"
+            subtitle="Active registered patients"
             icon={Users}
             variant="primary"
             delay={0.1}
+            onClick={() => navigate("/patients")}
           />
           <StatCard
             title="Today's Appointments"
@@ -97,14 +100,16 @@ export default function Dashboard() {
             icon={Calendar}
             variant="accent"
             delay={0.15}
+            onClick={() => navigate("/daily-schedule")}
           />
           <StatCard
             title="Active Treatments"
-            value={stats?.todayAppointments || 0}
-            subtitle="Panchakarma in progress"
+            value={Math.max(0, (stats?.todayAppointments || 0) - (stats?.completedToday || 0))}
+            subtitle="Treatments remaining today"
             icon={Heart}
             variant="highlight"
             delay={0.2}
+            onClick={() => navigate("/treatment-journey")}
           />
           <StatCard
             title="Inventory Items"
@@ -112,6 +117,7 @@ export default function Dashboard() {
             subtitle={`${stats?.lowStockAlerts || 0} low stock alerts`}
             icon={Package}
             delay={0.25}
+            onClick={() => navigate("/inventory")}
           />
         </div>
 

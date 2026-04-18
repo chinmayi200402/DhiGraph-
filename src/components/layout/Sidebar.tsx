@@ -16,12 +16,13 @@ import {
   FileText,
   Menu,
   X,
+  Brain,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Users, label: "Patients", path: "/patients" },
   { icon: Activity, label: "Prakriti Assessment", path: "/prakriti" },
   { icon: Calendar, label: "Therapy Scheduler", path: "/scheduler" },
@@ -51,38 +52,55 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
 
   const sidebarContent = (
     <>
-      {/* Logo */}
-      <div className="flex items-center gap-3 p-4 md:p-6 border-b border-sidebar-border">
-        <motion.div
-          whileHover={{ rotate: 360 }}
-          transition={{ duration: 0.6 }}
-          className="w-10 h-10 rounded-xl bg-gradient-to-br from-highlight to-accent flex items-center justify-center flex-shrink-0"
-        >
-          <Leaf className="w-5 h-5 text-sidebar" />
-        </motion.div>
+      <div className="flex flex-col gap-2 p-4 md:p-6 border-b border-sidebar-border relative">
+        <div className="flex items-center gap-3">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+            className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden border border-slate-100"
+          >
+            <img src="/logo.png" alt="Adichunchanagiri AMC" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', '<span class=\"text-xs font-bold text-slate-400\">AMC</span>'); }} />
+          </motion.div>
+          <AnimatePresence>
+            {(!collapsed || isMobile) && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <h1 className="font-display text-lg font-bold text-white leading-tight drop-shadow-md">
+                  Adichunchanagiri
+                </h1>
+                <p className="text-[11px] font-bold text-[#e1b15c] tracking-widest mt-0.5">AAMCHRC</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {isMobile && (
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="absolute right-4 top-4 p-2 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+        
         <AnimatePresence>
           {(!collapsed || isMobile) && (
             <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="pt-2"
             >
-              <h1 className="font-display text-xl font-semibold text-sidebar-foreground">
-                Ayursutra
-              </h1>
-              <p className="text-xs text-sidebar-foreground/60">Ayurvedic HMS</p>
+              <p className="text-[11px] uppercase tracking-wider text-white/95 leading-normal font-bold text-center border-t border-sidebar-border/50 pt-3 mt-2 drop-shadow-sm">
+                Adichunchanagiri Ayurveda Medical College Hospital & Research Centre
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
-        {isMobile && (
-          <button
-            onClick={() => setMobileOpen(false)}
-            className="ml-auto p-2 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
       </div>
 
       {/* Navigation */}
@@ -136,24 +154,41 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
         })}
       </nav>
 
-      {/* Collapse Toggle - Desktop only */}
-      {!isMobile && (
-        <div className="p-4 border-t border-sidebar-border">
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
-          >
-            {collapsed ? (
-              <ChevronRight className="w-5 h-5" />
+      {/* DhiGraph Branding Footer */}
+      <div className="p-4 border-t border-sidebar-border">
+          <AnimatePresence>
+            {(!collapsed || isMobile) ? (
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex items-center justify-center gap-2 mb-4"
+              >
+                <Brain className="w-5 h-5 text-sidebar-primary" />
+                <span className="font-bold text-white tracking-wide text-sm font-display">DhiGraph</span>
+              </motion.div>
             ) : (
-              <>
-                <ChevronLeft className="w-5 h-5" />
-                <span className="text-sm">Collapse</span>
-              </>
+               <div className="flex justify-center mb-4">
+                 <Brain className="w-5 h-5 text-sidebar-primary" />
+               </div>
             )}
-          </button>
-        </div>
-      )}
+          </AnimatePresence>
+
+          {/* Collapse Toggle - Desktop only */}
+          {!isMobile && (
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+            >
+              {collapsed ? (
+                <ChevronRight className="w-5 h-5" />
+              ) : (
+                <>
+                  <ChevronLeft className="w-5 h-5" />
+                  <span className="text-sm">Collapse</span>
+                </>
+              )}
+            </button>
+          )}
+      </div>
     </>
   );
 

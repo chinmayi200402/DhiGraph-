@@ -1,22 +1,22 @@
 import { motion } from "framer-motion";
-import { AlertTriangle, Package } from "lucide-react";
+import { AlertTriangle, Package, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export function InventoryAlert() {
+  const navigate = useNavigate();
+
   const { data: lowStockItems = [], isLoading } = useQuery({
     queryKey: ["low-stock-inventory"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("inventory")
-        .select("*")
-        .order("quantity", { ascending: true })
-        .limit(5);
-      
-      if (error) throw error;
-      
-      // Filter items where quantity is below min_stock_level
-      return (data || []).filter(item => item.quantity < item.min_stock_level);
+      const res = await fetch(
+        "http://localhost:5000/api/inventory?low_stock=true"
+      );
+      if (!res.ok) {
+        throw new Error("Failed to load inventory");
+      }
+      const data = await res.json();
+      return (data || []).slice(0, 5);
     },
   });
 
@@ -26,14 +26,14 @@ export function InventoryAlert() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
-        className="bg-destructive/5 rounded-2xl border border-destructive/20 p-4 md:p-6"
+        className="bg-muted/10 rounded-2xl border border-border p-4 md:p-6"
       >
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center">
-            <AlertTriangle className="w-4 h-4 text-destructive" />
+          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+            <Package className="w-4 h-4 text-muted-foreground" />
           </div>
-          <h3 className="font-display text-base md:text-lg font-semibold text-destructive">
-            Low Stock Alert
+          <h3 className="font-display text-base md:text-lg font-semibold text-foreground">
+            Inventory Status
           </h3>
         </div>
         <div className="space-y-3">
@@ -45,24 +45,42 @@ export function InventoryAlert() {
     );
   }
 
+  const isWellStocked = lowStockItems.length === 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.5 }}
-      className="bg-destructive/5 rounded-2xl border border-destructive/20 p-4 md:p-6"
+      onClick={() => navigate("/inventory")}
+      className={`rounded-2xl border p-4 md:p-6 cursor-pointer transition-colors ${isWellStocked
+          ? "bg-primary/5 border-primary/20 hover:bg-primary/10"
+          : "bg-destructive/5 border-destructive/20 hover:bg-destructive/10"
+        }`}
     >
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center">
-          <AlertTriangle className="w-4 h-4 text-destructive" />
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isWellStocked ? "bg-primary/20" : "bg-destructive/20"
+          }`}>
+          {isWellStocked ? (
+            <CheckCircle2 className="w-4 h-4 text-primary" />
+          ) : (
+            <AlertTriangle className="w-4 h-4 text-destructive" />
+          )}
         </div>
-        <h3 className="font-display text-base md:text-lg font-semibold text-destructive">
-          Low Stock Alert
+        <h3 className={`font-display text-base md:text-lg font-semibold flex-1 ${isWellStocked ? "text-primary" : "text-destructive"
+          }`}>
+          {isWellStocked ? "Inventory Status" : "Low Stock Alert"}
         </h3>
+        <span className={`text-xs hover:underline ${isWellStocked ? "text-primary" : "text-destructive"
+          }`}>
+          View Inventory
+        </span>
       </div>
 
-      {lowStockItems.length === 0 ? (
-        <p className="text-sm text-muted-foreground">All items are well stocked!</p>
+      {isWellStocked ? (
+        <p className="text-sm text-muted-foreground py-4 text-center">
+          All essential items are currently well stocked!
+        </p>
       ) : (
         <div className="space-y-3">
           {lowStockItems.map((item, index) => (

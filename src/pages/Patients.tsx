@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { PatientRegistrationForm, PatientFormData } from "@/components/patients/PatientRegistrationForm";
 import { PrakritiPromptModal } from "@/components/patients/PrakritiPromptModal";
 import { PatientCard } from "@/components/patients/PatientCard";
-import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import NfcScanner from "@/components/features/NfcScanner";
 
 type Patient = Tables<"patients"> & {
   prakriti?: string | null;
@@ -30,67 +30,12 @@ export default function Patients() {
   const fetchPatients = async () => {
     setIsLoading(true);
     try {
-      // Fetch patients
-      const { data: patientsData, error: patientsError } = await supabase
-        .from("patients")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (patientsError) throw patientsError;
-
-      // Fetch prakriti assessments to check which patients have been assessed
-      const { data: assessments } = await supabase
-        .from("prakriti_assessments")
-        .select("patient_id, vata_score, pitta_score, kapha_score");
-
-      // Create a map of patient prakriti
-      const prakritiMap = new Map<string, string>();
-      assessments?.forEach((a) => {
-        const scores = [
-          { name: "Vata", score: a.vata_score },
-          { name: "Pitta", score: a.pitta_score },
-          { name: "Kapha", score: a.kapha_score },
-        ].sort((x, y) => y.score - x.score);
-
-        const total = a.vata_score + a.pitta_score + a.kapha_score;
-        if (total === 0) return;
-
-        const primary = scores[0];
-        const secondary = scores[1];
-        const diff = ((primary.score - secondary.score) / total) * 100;
-
-        const prakritiType = diff < 10 
-          ? `${primary.name}-${secondary.name}` 
-          : primary.name;
-
-        prakritiMap.set(a.patient_id, prakritiType);
-      });
-
-      // Fetch appointments to determine status
-      const { data: appointments } = await supabase
-        .from("appointments")
-        .select("patient_id, status");
-
-      const statusMap = new Map<string, "In Treatment" | "Scheduled" | "Completed" | "New">();
-      appointments?.forEach((apt) => {
-        const current = statusMap.get(apt.patient_id);
-        if (apt.status === "In Progress") {
-          statusMap.set(apt.patient_id, "In Treatment");
-        } else if (apt.status === "Scheduled" && current !== "In Treatment") {
-          statusMap.set(apt.patient_id, "Scheduled");
-        } else if (apt.status === "Completed" && !current) {
-          statusMap.set(apt.patient_id, "Completed");
-        }
-      });
-
-      // Combine data
-      const enrichedPatients: Patient[] = (patientsData || []).map((p) => ({
-        ...p,
-        prakriti: prakritiMap.get(p.id) || null,
-        status: statusMap.get(p.id) || "New",
-      }));
-
-      setPatients(enrichedPatients);
+      const res = await fetch("http://localhost:5000/api/patients");
+      if (!res.ok) {
+        throw new Error("Failed to load patients");
+      }
+      const data: Patient[] = await res.json();
+      setPatients(data);
     } catch (error) {
       console.error("Error fetching patients:", error);
       toast.error("Failed to load patients");
@@ -105,16 +50,19 @@ export default function Patients() {
 
   const filteredPatients = patients.filter((patient) =>
     patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.contact.includes(searchQuery) ||
+    String(patient.contact ?? "").includes(searchQuery) ||
     (patient.blood_group && patient.blood_group.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleAddPatient = async (formData: PatientFormData) => {
     setIsSaving(true);
     try {
-      const { data, error } = await supabase
-        .from("patients")
-        .insert({
+      const res = await fetch("http://localhost:5000/api/patients", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           name: formData.name,
           age: parseInt(formData.age),
           gender: formData.gender,
@@ -131,12 +79,15 @@ export default function Patients() {
           ipd_no: formData.ipd_no || null,
           chief_complaint: formData.chief_complaint || null,
           registration_date: formData.registration_date.toISOString().split("T")[0],
-        })
-        .select()
-        .single();
+        }),
+      });
 
-      if (error) throw error;
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => ({}));
+        throw new Error(errorBody.message || "Failed to create patient");
+      }
 
+      const data = await res.json();
       toast.success("Patient registered successfully!");
       setShowAddModal(false);
       setNewPatientData({ id: data.id, name: data.name });
@@ -195,6 +146,15 @@ export default function Patients() {
         </motion.div>
 
         {/* Search and Filters */}
+        <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 0.1 }}
+           className="w-full mb-6"
+        >
+          <NfcScanner onPatientFound={(patient) => navigate(`/patient-details?patientId=${patient._id}&patientName=${encodeURIComponent(patient.name)}`)} />
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -270,7 +230,7 @@ export default function Patients() {
                 key={patient.id}
                 patient={patient}
                 index={index}
-                onClick={() => navigate(`/prakriti?patientId=${patient.id}&patientName=${encodeURIComponent(patient.name)}`)}
+                onClick={() => navigate(`/patient-details?patientId=${patient.id}&patientName=${encodeURIComponent(patient.name)}`)}
               />
             ))}
           </div>

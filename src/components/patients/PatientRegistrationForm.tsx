@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { CalendarIcon, AlertTriangle, IdCard, X } from "lucide-react";
+import { CalendarIcon, AlertTriangle, IdCard, X, PenIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import ScribblePad from "@/components/features/ScribblePad";
 import {
   Select,
   SelectContent,
@@ -39,6 +40,7 @@ export interface PatientFormData {
   opd_no: string;
   ipd_no: string;
   chief_complaint: string;
+  department: string;
 }
 
 interface PatientRegistrationFormProps {
@@ -62,6 +64,16 @@ const EDUCATION_OPTIONS = [
 
 const SOCIO_ECONOMIC_OPTIONS = ["Lower", "Middle", "Upper"];
 
+const DEPARTMENTS = [
+  "Kayachikitsa",
+  "Panchakarma",
+  "Shalakya",
+  "Shalya(MOT)",
+  "Atyayika",
+  "Swasthavrutta",
+  "PTSR"
+];
+
 export function PatientRegistrationForm({
   onSubmit,
   onCancel,
@@ -84,9 +96,12 @@ export function PatientRegistrationForm({
     opd_no: "",
     ipd_no: "",
     chief_complaint: "",
+    department: "",
   });
 
+
   const [errors, setErrors] = useState<Partial<Record<keyof PatientFormData, string>>>({});
+  const [isPadOpen, setIsPadOpen] = useState(false);
 
   const isRareBloodGroup = RARE_BLOOD_GROUPS.includes(formData.blood_group);
 
@@ -128,6 +143,10 @@ export function PatientRegistrationForm({
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+    if (field === 'department' && value) {
+      // Auto open pad when a department is selected
+      setIsPadOpen(true);
+    }
   };
 
   return (
@@ -150,7 +169,7 @@ export function PatientRegistrationForm({
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-display text-2xl font-semibold text-foreground">
-                Patient Registration & Intake Form
+                Patient Details
               </h2>
               <p className="text-muted-foreground text-sm mt-1">
                 Complete all required fields marked with *
@@ -457,8 +476,28 @@ export function PatientRegistrationForm({
                 />
               </div>
 
+              {/* Department */}
+              <div className="space-y-2">
+                <Label>Referred Department</Label>
+                <Select
+                  value={formData.department}
+                  onValueChange={(value) => updateField("department", value)}
+                >
+                  <SelectTrigger className="rounded-xl border-primary/20 hover:border-primary">
+                    <SelectValue placeholder="Select Department" />
+                  </SelectTrigger>
+                  <SelectContent className="z-50 bg-white">
+                    {DEPARTMENTS.map((dept) => (
+                      <SelectItem key={dept} value={dept}>
+                        {dept}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Address - Full Width */}
-              <div className="space-y-2 md:col-span-2 lg:col-span-3">
+              <div className="space-y-2 lg:col-span-1">
                 <Label htmlFor="address">Address</Label>
                 <Textarea
                   id="address"
@@ -471,50 +510,47 @@ export function PatientRegistrationForm({
             </div>
           </div>
 
-          {/* Section 4: Clinical Record Information */}
-          <div className="space-y-4">
+          {/* Section 4: Case Sheet (Scribble Area) */}
+          <div className="space-y-4 pt-4">
             <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-              4. Clinical Record Information
+              4. Complete Case Sheet
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* OPD No */}
-              <div className="space-y-2">
-                <Label htmlFor="opd_no">OPD No.</Label>
-                <Input
-                  id="opd_no"
-                  value={formData.opd_no}
-                  onChange={(e) => updateField("opd_no", e.target.value)}
-                  className="rounded-xl"
-                  placeholder="Outpatient Department Number"
-                />
+            {formData.department ? (
+              <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center relative">
+                 <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4 border-2 border-primary/20">
+                    <PenIcon className="w-8 h-8 text-primary" />
+                 </div>
+                 <h2 className="text-2xl font-display font-medium text-foreground">{formData.department} Case Sheet Selected</h2>
+                 <p className="text-muted-foreground mt-2 text-center max-w-sm mb-6">The hardware scribe pad acts as a true full-screen application. Click below to enter the workspace.</p>
+                 <Button onClick={() => setIsPadOpen(true)} className="bg-slate-800 text-white rounded-xl shadow-lg px-8">
+                   Open Fullscreen Scribe Pad
+                 </Button>
               </div>
-
-              {/* IPD No */}
-              <div className="space-y-2">
-                <Label htmlFor="ipd_no">IPD No.</Label>
-                <Input
-                  id="ipd_no"
-                  value={formData.ipd_no}
-                  onChange={(e) => updateField("ipd_no", e.target.value)}
-                  className="rounded-xl"
-                  placeholder="Inpatient Department Number"
-                />
+            ) : (
+              <div className="w-full bg-white dark:bg-card border-2 border-dashed border-border rounded-xl min-h-[300px] flex flex-col items-center justify-center relative">
+                <div className="opacity-50 flex flex-col items-center">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                    <span className="text-primary font-medium text-2xl">?</span>
+                  </div>
+                  <h2 className="text-2xl font-display font-medium text-foreground">Select a Department</h2>
+                  <p className="text-muted-foreground mt-2 text-center max-w-sm">Please select a referred department above to unlock the respective Case Sheet pad.</p>
+                </div>
               </div>
-
-              {/* Chief Complaint - Full Width */}
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="chief_complaint">K/C/O (Known Case Of / Chief Complaint)</Label>
-                <Textarea
-                  id="chief_complaint"
-                  value={formData.chief_complaint}
-                  onChange={(e) => updateField("chief_complaint", e.target.value)}
-                  className="rounded-xl min-h-[120px]"
-                  placeholder="Enter medical notes, diagnosis, or chief complaint..."
-                />
-              </div>
-            </div>
+            )}
           </div>
         </div>
+
+        {/* Dedicated Full Screen Overlay Injection */}
+        {isPadOpen && formData.department && (
+          <ScribblePad 
+            patientId={formData.serial_no || "New_Patient"} 
+            doctorId="current_doctor" 
+            fullScreenMode={true} 
+            doctorName="Dr. Ayush Practitioner"
+            department={formData.department}
+            onClose={() => setIsPadOpen(false)}
+          />
+        )}
 
         {/* Footer */}
         <div className="sticky bottom-0 bg-card border-t border-border p-6 rounded-b-2xl">
