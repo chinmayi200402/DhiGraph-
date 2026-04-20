@@ -1,74 +1,60 @@
-# Welcome to your HMS CAPSTONE PROJECT project
+<p align="center">
+  <img src="https://socialify.git.ci/chinmayi200402/ayushayur/image?description=1&font=Raleway&name=1&pattern=Charlie%20Brown&theme=Auto" alt="project-image">
+</p>
 
-## Project info
+<p align="center">
+  <img src="https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB" alt="shields">
+  &nbsp;
+  <img src="https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white" alt="shields">
+  &nbsp;
+  <img src="https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB" alt="shields">
+  &nbsp;
+  <img src="https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white" alt="shields">
+  &nbsp;
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="shields">
+</p>
 
-**URL**: https://HMS CAPSTONE PROJECT.dev/projects/REPLACE_WITH_PROJECT_ID
+<h2>🛠️ Installation Steps:</h2>
 
+<p>1. Clone the repository and install frontend dependencies</p>
 
-## How can I edit this code?
+```bash
+npm install
+```
 
-There are several ways of editing your application.
+<p>2. Run frontend</p>
 
-**Use HMS CAPSTONE PROJECT**
-
-Simply visit the [HMS CAPSTONE PROJECT Project](https://HMS CAPSTONE PROJECT.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via HMS CAPSTONE PROJECT will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in HMS CAPSTONE PROJECT.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+<p>3. Install backend dependencies</p>
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+cd ayushayur-backend-master
+npm install
+```
 
-**Use GitHub Codespaces**
+<p>4. Run backend</p>
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+node server.js
+```
+<br>
 
-## What technologies are used for this project?
+<h2>📷 Project Screenshots:</h2>
 
-This project is built with:
+<img src="https://github.com/chinmayi200402/ayushayur/blob/master/imgs/login_screen.png?raw=true" alt="login-screenshot" width="700" height="400">
+ &nbsp;
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+<h2>⚙️ Architecture:</h2>
+<img src="https://via.placeholder.com/700x400.png?text=Architecture+Diagram" alt="architecture-diagram" width="700" height="400">
+ &nbsp;
+ &nbsp;
 
-## How can I deploy this project?
-
-Simply open [HMS CAPSTONE PROJECT](https://HMS CAPSTONE PROJECT.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my HMS CAPSTONE PROJECT project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.HMS CAPSTONE PROJECT.dev/features/custom-domain#custom-domain)
+<h2>🚀 Future Enhancements:</h2>
+<ul>
+  <li>Implement advanced AI integration for deeper predictive healthcare analytics.</li>
+  <li>Add comprehensive role-based access control and biometric authentication for secure access.</li>
+  <li>Expand the mobile application views for remote tele-consultation support.</li>
+</ul>
