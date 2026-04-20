@@ -305,7 +305,7 @@ export default function TreatmentJourney() {
                 <ScribblePad 
                   patientId={patient?.id?.toString() || "mock_patient"} 
                   doctorId="mock_doctor_id" 
-                  fullScreenMode={true}
+                  fullScreenMode={false}
                   doctorName="Dr. Ayush Practitioner"
                 />
               </div>

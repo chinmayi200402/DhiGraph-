@@ -1,9 +1,17 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Save, Eraser, PenIcon, Trash2, Undo2, FileDown, Brain } from 'lucide-react';
+import { Save, Eraser, PenIcon, Trash2, Undo2, FileDown, Brain, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../ui/dialog";
 
 interface ScribblePadProps {
   patientId: string;
@@ -23,6 +31,12 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
   const penOnly = true;
 
   const [history, setHistory] = useState<ImageData[]>([]);
+  
+  // AI Preview State
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiTranscription, setAiTranscription] = useState("");
+  const [tempImageData, setTempImageData] = useState("");
 
   const saveStateToHistory = () => {
     const canvas = canvasRef.current;
@@ -159,16 +173,22 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
     }
   };
 
-  const exportCaseStudyPdf = () => {
+  const analyzeAndPreview = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    setIsAnalyzing(true);
+    toast.info("Analyzing handwriting with Gemini AI... Please wait.");
     
     // Create a temporary solid background canvas for export, as eraser uses transparency
     const exportCanvas = document.createElement("canvas");
     exportCanvas.width = canvas.width;
     exportCanvas.height = canvas.height;
     const expCtx = exportCanvas.getContext("2d");
-    if (!expCtx) return;
+    if (!expCtx) {
+      setIsAnalyzing(false);
+      return;
+    }
     
     // Fill white background
     expCtx.fillStyle = "#ffffff";
@@ -177,7 +197,34 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
     expCtx.drawImage(canvas, 0, 0);
 
     const imageData = exportCanvas.toDataURL('image/png');
+    setTempImageData(imageData);
     
+    // Call our backend to transcribe the image via Gemini
+    try {
+      const transcribeRes = await fetch('http://localhost:5000/api/ai/transcribe-scribble', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_data: imageData })
+      });
+      if (transcribeRes.ok) {
+        const data = await transcribeRes.json();
+        setAiTranscription(data.transcription || "No readable handwriting detected.");
+        setIsPreviewOpen(true);
+      } else {
+        toast.error("Handwriting AI transcription failed.");
+      }
+    } catch (err) {
+      console.error("Transcription error:", err);
+      toast.error("Could not reach AI transcription service.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const downloadFinalPdf = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
     const doc = new jsPDF();
     
     // Header Branding
@@ -199,7 +246,7 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
     // Calculate proportional dimensions holding exact aspect ratio
     const imgRatio = canvas.height / canvas.width;
     const maxPdfImageWidth = 170;
-    const maxPdfImageHeight = 280 - 55; // Leave bottom margin
+    const maxPdfImageHeight = 280 - 150; // Leave MORE bottom margin for AI text
     
     let renderedWidth = maxPdfImageWidth;
     let renderedHeight = renderedWidth * imgRatio;
@@ -212,16 +259,38 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
 
     // Embed proportional canvas image, horizontally center it if scaled down
     const xOffset = 20 + (maxPdfImageWidth - renderedWidth) / 2;
-    doc.addImage(imageData, 'PNG', xOffset, 75, renderedWidth, renderedHeight);
+    doc.addImage(tempImageData, 'PNG', xOffset, 75, renderedWidth, renderedHeight);
+    
+    let currentY = 75 + renderedHeight + 10;
     
     if (notes) {
-      doc.text("Clinical Notes / Transcription:", 20, maxPdfImageHeight + 20);
+      doc.setFont("helvetica", "bold");
+      doc.text("Typed Clinical Notes:", 20, currentY);
+      doc.setFont("helvetica", "normal");
+      currentY += 8;
       const splitNotes = doc.splitTextToSize(notes, 170);
-      doc.text(splitNotes, 20, maxPdfImageHeight + 30);
+      doc.text(splitNotes, 20, currentY);
+      currentY += (splitNotes.length * 7) + 5;
+    }
+
+    if (aiTranscription) {
+      doc.setFont("helvetica", "bold");
+      doc.text("AI Transcribed Notes (Gemini 1.5):", 20, currentY);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      currentY += 8;
+      const splitTranscription = doc.splitTextToSize(aiTranscription, 170);
+      // Check if we need a new page
+      if (currentY + (splitTranscription.length * 6) > 280) {
+        doc.addPage();
+        currentY = 20;
+      }
+      doc.text(splitTranscription, 20, currentY);
     }
     
     doc.save(`CaseStudy_${patientId}_${Date.now()}.pdf`);
-    toast.success("Case Study PDF Downloaded");
+    toast.success("Case Study PDF with AI Transcription Downloaded");
+    setIsPreviewOpen(false);
   };
 
   // Define dynamic sizes
@@ -296,9 +365,9 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" onClick={exportCaseStudyPdf} className="rounded-xl">
-              <FileDown className="w-4 h-4 mr-2" />
-              Download PDF
+            <Button variant="outline" onClick={analyzeAndPreview} disabled={isAnalyzing} className="rounded-xl">
+              {isAnalyzing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileDown className="w-4 h-4 mr-2" />}
+              {isAnalyzing ? "Analyzing..." : "Download PDF"}
             </Button>
             <Button onClick={saveScribble} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/20">
               <Save className="w-4 h-4 mr-2" />
@@ -345,6 +414,42 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
           </div>
         </div>
       </CardContent>
+
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-3xl border-0 shadow-2xl rounded-2xl">
+          <DialogHeader className="mb-2">
+            <DialogTitle className="font-display text-2xl flex items-center gap-2">
+              <Brain className="w-6 h-6 text-primary" />
+              Review AI Transcription
+            </DialogTitle>
+            <DialogDescription className="text-base font-medium text-slate-500">
+              The AI has converted your handwritten notes into text. You can edit or append to it below using your keyboard before downloading the final PDF.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col gap-4 py-2">
+            <textarea
+              className="w-full min-h-[300px] p-5 text-base bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y select-text shadow-inner"
+              value={aiTranscription}
+              onChange={(e) => setAiTranscription(e.target.value)}
+              placeholder="AI Transcription will appear here. You can manually type or edit..."
+              spellCheck="false"
+            />
+          </div>
+
+          <DialogFooter className="mt-2 flex gap-3 sm:justify-between items-center w-full">
+            <p className="text-xs text-slate-400 font-medium hidden sm:block">* Editing here updates the downloaded PDF layout directly.</p>
+            <div className="flex gap-2 w-full sm:w-auto">
+                <Button variant="ghost" onClick={() => setIsPreviewOpen(false)} className="rounded-xl font-semibold">
+                Cancel
+                </Button>
+                <Button onClick={downloadFinalPdf} className="bg-primary text-white hover:bg-primary/90 rounded-xl font-bold shadow-lg w-full sm:w-auto">
+                <FileDown className="w-4 h-4 mr-2" /> Download Final PDF
+                </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

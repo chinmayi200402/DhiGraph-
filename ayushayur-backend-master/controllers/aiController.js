@@ -112,3 +112,43 @@ export const getAiContext = asyncHandler(async (req, res) => {
   const logs = await AiLog.find({ patient_id: req.params.patientId }).sort({ createdAt: -1 });
   res.status(200).json(logs);
 });
+
+// @desc    Transcribe handwritten scribble into text
+// @route   POST /api/ai/transcribe-scribble
+// @access  Private
+export const transcribeScribble = asyncHandler(async (req, res) => {
+  const { image_data } = req.body;
+  if (!image_data) {
+    return res.status(400).json({ error: 'No image data provided' });
+  }
+
+  const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+  if (!genAI) {
+    return res.status(500).json({ error: 'Gemini API not configured' });
+  }
+
+  try {
+    const base64Data = image_data.replace(/^data:image\/[a-z]+;base64,/, "");
+
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = "Please act as an expert medical transcriptionist. Analyze this handwritten clinical note/scribble from a doctor and accurately transcribe the text. If there are clear sections (like vitals, symptoms, diagnosis, treatment), please structure them. Only return the transcribed text, nothing else. If it is completely unreadable or blank, just reply with 'No readable handwriting detected.'";
+
+    const imageParts = [
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: "image/png"
+        }
+      }
+    ];
+
+    const result = await model.generateContent([prompt, ...imageParts]);
+    const response = await result.response;
+    const text = response.text();
+
+    res.status(200).json({ transcription: text });
+  } catch (error) {
+    console.error("Gemini Transcription failed:", error);
+    res.status(500).json({ error: 'Failed to transcribe image' });
+  }
+});
