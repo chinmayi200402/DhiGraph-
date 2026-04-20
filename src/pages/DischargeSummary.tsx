@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FileText, Download, Printer, User, Calendar, Activity, Utensils, ArrowRight } from "lucide-react";
 import html2canvas from "html2canvas";
@@ -15,7 +15,7 @@ import {
 import { DischargePrintView } from "@/components/discharge/DischargePrintView";
 
 interface PatientData {
-  id: number;
+  id: string | number;
   name: string;
   age: number;
   gender: string;
@@ -36,86 +36,54 @@ interface PatientData {
   followUp: string;
 }
 
-const patientsData: PatientData[] = [
-  {
-    id: 1,
-    name: "Rajesh Kumar",
-    age: 45,
-    gender: "Male",
-    contact: "+91 98765 43210",
-    bloodGroup: "O+",
-    admissionDate: "2024-01-05",
-    dischargeDate: "2024-01-12",
-    diagnosis: "Vata-Pitta Imbalance, Chronic Lower Back Pain",
-    treatingDoctor: "Dr. Anil Sharma",
-    initialPrakriti: { vata: 55, pitta: 30, kapha: 15 },
-    finalPrakriti: { vata: 38, pitta: 35, kapha: 27 },
-    treatmentPlan: [
-      { day: 1, therapy: "Snehapana (Internal Oleation)", completed: true },
-      { day: 2, therapy: "Snehapana (Increased dose)", completed: true },
-      { day: 3, therapy: "Abhyanga + Swedana", completed: true },
-      { day: 4, therapy: "Kati Basti", completed: true },
-      { day: 5, therapy: "Virechana (Purgation)", completed: true },
-      { day: 6, therapy: "Samsarjana Krama Day 1", completed: true },
-      { day: 7, therapy: "Samsarjana Krama Day 2", completed: true },
-    ],
-    dietAdvice: [
-      "Follow Vata-pacifying diet for 2 weeks",
-      "Prefer warm, cooked, moist foods",
-      "Avoid cold, raw, and dry foods",
-      "Include ghee, sesame oil in cooking",
-      "Drink warm water throughout the day",
-      "Have dinner before 7 PM",
-      "Avoid caffeine and carbonated drinks",
-    ],
-    followUp: "Follow-up consultation after 2 weeks. Continue prescribed Ashwagandha Churna and Dhanwantaram Tailam for external application.",
-  },
-  {
-    id: 2,
-    name: "Priya Sharma",
-    age: 32,
-    gender: "Female",
-    contact: "+91 87654 32109",
-    bloodGroup: "A+",
-    admissionDate: "2024-01-08",
-    dischargeDate: "2024-01-22",
-    diagnosis: "Pitta-Kapha Imbalance, Skin Disorders, Digestive Issues",
-    treatingDoctor: "Dr. Meera Nair",
-    initialPrakriti: { vata: 20, pitta: 50, kapha: 30 },
-    finalPrakriti: { vata: 28, pitta: 38, kapha: 34 },
-    treatmentPlan: [
-      { day: 1, therapy: "Deepana-Pachana", completed: true },
-      { day: 2, therapy: "Snehapana Day 1", completed: true },
-      { day: 3, therapy: "Snehapana Day 2", completed: true },
-      { day: 4, therapy: "Snehapana Day 3", completed: true },
-      { day: 5, therapy: "Abhyanga + Swedana", completed: true },
-      { day: 6, therapy: "Virechana", completed: true },
-      { day: 7, therapy: "Rest Day", completed: true },
-      { day: 8, therapy: "Samsarjana Krama Day 1", completed: true },
-      { day: 9, therapy: "Samsarjana Krama Day 2", completed: true },
-      { day: 10, therapy: "Samsarjana Krama Day 3", completed: true },
-      { day: 11, therapy: "Takradhara", completed: true },
-      { day: 12, therapy: "Takradhara", completed: true },
-      { day: 13, therapy: "Lepam Treatment", completed: true },
-      { day: 14, therapy: "Final Assessment", completed: true },
-    ],
-    dietAdvice: [
-      "Follow Pitta-pacifying diet for 3 weeks",
-      "Prefer cooling foods like cucumber, coconut",
-      "Avoid spicy, sour, and fermented foods",
-      "Include bitter gourd, neem in diet",
-      "Drink cooling herbal teas",
-      "Avoid direct sun exposure",
-      "Practice stress management techniques",
-    ],
-    followUp: "Monthly follow-up for 3 months. Continue Triphala Churna at bedtime.",
-  },
-];
-
 export default function DischargeSummary() {
+  const [patientsData, setPatientsData] = useState<PatientData[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const printRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch("http://localhost:5000/api/patients");
+        if (!res.ok) throw new Error("Failed to fetch patients");
+        const data = await res.json();
+        
+        const transformed: PatientData[] = data.map((p: any) => ({
+          id: p._id,
+          name: p.name || 'Unknown Patient',
+          age: p.age || 0,
+          gender: p.gender || 'Not specified',
+          contact: p.contact || 'Not specified',
+          bloodGroup: p.blood_group || 'Unknown',
+          admissionDate: p.createdAt || new Date().toISOString(),
+          dischargeDate: new Date().toISOString(),
+          diagnosis: p.chief_complaint || p.diagnosis || 'General Assessment',
+          treatingDoctor: 'Dr. Principal Doctor',
+          initialPrakriti: { vata: 33, pitta: 33, kapha: 34 },
+          finalPrakriti: { vata: 34, pitta: 33, kapha: 33 },
+          treatmentPlan: [
+            { day: 1, therapy: "General Assessment", completed: true }
+          ],
+          dietAdvice: [
+            "Follow prescribed balanced diet",
+            "Drink plenty of warm water"
+          ],
+          followUp: "Follow-up consultation after 1 week."
+        }));
+        
+        setPatientsData(transformed);
+      } catch (error) {
+        console.error("Error fetching patients:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPatients();
+  }, []);
 
   const selectedPatient = patientsData.find(p => p.id.toString() === selectedPatientId);
 
