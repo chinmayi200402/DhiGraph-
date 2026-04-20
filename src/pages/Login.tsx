@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Brain, User, Shield, Stethoscope, ArrowRight } from "lucide-react";
+import { Brain, User, Shield, Stethoscope, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ export default function Login() {
     const [role, setRole] = useState("admin");
     const [name, setName] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
     const ROLE_PASSWORDS: Record<string, string> = {
         admin: "admin123",
@@ -111,14 +112,25 @@ export default function Login() {
 
                         <div className="space-y-4">
                             <label className="text-sm font-medium text-foreground ml-1">Password</label>
-                            <Input
-                                type="password"
-                                placeholder="Enter your password..."
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="h-12 bg-background/50 border-primary/20 focus-visible:ring-primary shadow-sm"
-                                required
-                            />
+                            <div className="relative">
+                                <Input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Enter your password..."
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="h-12 bg-background/50 border-primary/20 focus-visible:ring-primary shadow-sm pr-12"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors focus:outline-none"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                    title={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
                         </div>
 
                         <Button type="submit" className="w-full h-12 text-lg font-medium group transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
