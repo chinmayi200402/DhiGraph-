@@ -4,14 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Save, Eraser, PenIcon, Trash2, Undo2, FileDown, Brain, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../ui/dialog";
+
 
 interface ScribblePadProps {
   patientId: string;
@@ -243,25 +236,7 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
     doc.text(`Patient ID: ${patientId}`, 20, 58);
     doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 66);
 
-    // Calculate proportional dimensions holding exact aspect ratio
-    const imgRatio = canvas.height / canvas.width;
-    const maxPdfImageWidth = 170;
-    const maxPdfImageHeight = 280 - 150; // Leave MORE bottom margin for AI text
-    
-    let renderedWidth = maxPdfImageWidth;
-    let renderedHeight = renderedWidth * imgRatio;
-
-    // Scale back if height breaks page boundary
-    if (renderedHeight > maxPdfImageHeight) {
-        renderedHeight = maxPdfImageHeight;
-        renderedWidth = renderedHeight / imgRatio;
-    }
-
-    // Embed proportional canvas image, horizontally center it if scaled down
-    const xOffset = 20 + (maxPdfImageWidth - renderedWidth) / 2;
-    doc.addImage(tempImageData, 'PNG', xOffset, 75, renderedWidth, renderedHeight);
-    
-    let currentY = 75 + renderedHeight + 10;
+    let currentY = 80;
     
     if (notes) {
       doc.setFont("helvetica", "bold");
@@ -275,7 +250,7 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
 
     if (aiTranscription) {
       doc.setFont("helvetica", "bold");
-      doc.text("AI Transcribed Notes (Gemini 1.5):", 20, currentY);
+      doc.text("Clinical Notes Transcription:", 20, currentY);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       currentY += 8;
@@ -365,9 +340,9 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" onClick={analyzeAndPreview} disabled={isAnalyzing} className="rounded-xl">
-              {isAnalyzing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileDown className="w-4 h-4 mr-2" />}
-              {isAnalyzing ? "Analyzing..." : "Download PDF"}
+            <Button variant="outline" onClick={analyzeAndPreview} disabled={isAnalyzing} className="rounded-xl border-primary text-primary hover:bg-primary/10">
+              {isAnalyzing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Brain className="w-4 h-4 mr-2" />}
+              {isAnalyzing ? "Analyzing..." : "AI Convert to Text"}
             </Button>
             <Button onClick={saveScribble} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/20">
               <Save className="w-4 h-4 mr-2" />
@@ -376,11 +351,14 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
           </div>
         </div>
 
-        {/* Scrollable Container for Infinite Space with Authentic Pad Styling */}
-        <div className={`overflow-y-auto overflow-x-auto ${fullScreenMode ? 'flex-1 h-full w-full p-4 md:p-6 flex justify-center' : 'border border-slate-200 rounded-bl-xl rounded-br-xl'}`}>
-          <div className={`${fullScreenMode ? 'w-full rounded-sm overflow-hidden border border-slate-200 shadow-xl' : 'w-full'} bg-white relative`}>
-            
-            {/* Realistic pad binding effect */}
+        {/* Main Layout containing Canvas and optional AI Preview Sidebar */}
+        <div className={`flex w-full ${fullScreenMode ? 'flex-1 h-full overflow-hidden' : ''}`}>
+          
+          {/* Scrollable Container for Infinite Space with Authentic Pad Styling */}
+          <div className={`overflow-y-auto overflow-x-auto transition-all duration-300 ${isPreviewOpen ? 'w-2/3 border-r border-slate-200' : 'w-full'} ${fullScreenMode ? 'p-4 md:p-6 flex justify-center bg-slate-100/50' : 'border border-slate-200 rounded-bl-xl rounded-br-xl'}`}>
+            <div className={`${fullScreenMode ? 'w-full max-w-6xl rounded-sm overflow-hidden border border-slate-200 shadow-xl flex-shrink-0 mx-auto' : 'w-full'} bg-white relative`}>
+              
+              {/* Realistic pad binding effect */}
             {fullScreenMode && (
               <div className="h-6 w-full bg-slate-800 flex items-center justify-around px-8">
                  <div className="w-8 h-2 bg-slate-600 rounded-full"></div>
@@ -411,45 +389,45 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
             onPointerLeave={stopDrawing}
             onPointerCancel={stopDrawing}
           />
+            </div>
           </div>
+
+          {/* AI Case History Preview Sidebar */}
+          {isPreviewOpen && (
+            <div className="w-1/3 bg-white shadow-[-10px_0_20px_rgba(0,0,0,0.03)] z-10 flex flex-col h-full animate-in slide-in-from-right border-l border-slate-200">
+              <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50/80 shrink-0">
+                <div>
+                  <h3 className="font-display text-lg font-bold flex items-center gap-2 text-slate-800">
+                    <Brain className="w-5 h-5 text-primary" />
+                    Case History Preview
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">Review and edit transcription</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setIsPreviewOpen(false)} className="rounded-xl hover:bg-slate-200 text-slate-500">
+                  Close
+                </Button>
+              </div>
+              <div className="p-5 flex-1 overflow-y-auto bg-slate-50/30">
+                <textarea
+                  className="w-full h-full min-h-[400px] p-5 text-base bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none shadow-sm leading-relaxed text-slate-700"
+                  value={aiTranscription}
+                  onChange={(e) => setAiTranscription(e.target.value)}
+                  placeholder="AI Transcription will appear here. You can manually type or edit..."
+                  spellCheck="false"
+                />
+              </div>
+              <div className="p-5 border-t border-slate-200 bg-white shrink-0">
+                <Button onClick={downloadFinalPdf} className="w-full bg-primary text-white hover:bg-primary/90 rounded-xl font-bold py-6 text-base shadow-lg shadow-primary/20">
+                  <FileDown className="w-5 h-5 mr-2" /> Download Final PDF
+                </Button>
+                <p className="text-center text-xs text-slate-400 mt-3 font-medium flex items-center justify-center gap-1">
+                  <Brain className="w-3 h-3" /> Powered by Gemini AI
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
-
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-3xl border-0 shadow-2xl rounded-2xl">
-          <DialogHeader className="mb-2">
-            <DialogTitle className="font-display text-2xl flex items-center gap-2">
-              <Brain className="w-6 h-6 text-primary" />
-              Review AI Transcription
-            </DialogTitle>
-            <DialogDescription className="text-base font-medium text-slate-500">
-              The AI has converted your handwritten notes into text. You can edit or append to it below using your keyboard before downloading the final PDF.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex flex-col gap-4 py-2">
-            <textarea
-              className="w-full min-h-[300px] p-5 text-base bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y select-text shadow-inner"
-              value={aiTranscription}
-              onChange={(e) => setAiTranscription(e.target.value)}
-              placeholder="AI Transcription will appear here. You can manually type or edit..."
-              spellCheck="false"
-            />
-          </div>
-
-          <DialogFooter className="mt-2 flex gap-3 sm:justify-between items-center w-full">
-            <p className="text-xs text-slate-400 font-medium hidden sm:block">* Editing here updates the downloaded PDF layout directly.</p>
-            <div className="flex gap-2 w-full sm:w-auto">
-                <Button variant="ghost" onClick={() => setIsPreviewOpen(false)} className="rounded-xl font-semibold">
-                Cancel
-                </Button>
-                <Button onClick={downloadFinalPdf} className="bg-primary text-white hover:bg-primary/90 rounded-xl font-bold shadow-lg w-full sm:w-auto">
-                <FileDown className="w-4 h-4 mr-2" /> Download Final PDF
-                </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 };

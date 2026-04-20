@@ -4,6 +4,7 @@ import Patient from '../models/Patient.js';
 import Appointment from '../models/Appointment.js';
 import TreatmentJourney from '../models/TreatmentJourney.js';
 import Scribble from '../models/Scribble.js';
+import Inventory from '../models/Inventory.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Simulate RAG call or execute real OpenAI call
@@ -52,8 +53,27 @@ export const queryAi = asyncHandler(async (req, res) => {
         }
       }
     } else {
-      patientName = "Test Patient (Mock)";
-      contextBlocks.push(`System Note: Operating in static mode. No structured DB records exist for ID: ${patient_id}`);
+      patientName = "General Dashboard User";
+      contextBlocks.push(`System Note: Operating in global hospital scope.`);
+    }
+
+    if (query) {
+      const qLower = query.toLowerCase();
+      if (qLower.includes('inventory') || qLower.includes('stock') || qLower.includes('patient') || qLower.includes('hospital') || qLower.includes('medication')) {
+          const totalPatients = await Patient.countDocuments();
+          const inventoryItems = await Inventory.find();
+          const lowStockItems = inventoryItems.filter(item => item.quantity < item.min_stock_level);
+          
+          let appInfo = `Hospital & Application Overview:\n- Total Registered Patients in DhiGraph: ${totalPatients}\n- Total Inventory Components Tracked: ${inventoryItems.length}\n`;
+          if (lowStockItems.length > 0) {
+              appInfo += `- CRITICAL Low Stock Alerts: ${lowStockItems.map(i => `${i.item_name} (Only ${i.quantity} ${i.unit} left, requires minimum ${i.min_stock_level})`).join('; ')}`;
+          } else {
+              appInfo += `- All inventory items are sufficiently stocked across the system.`;
+          }
+          
+          contextBlocks.push(appInfo);
+          context_used.push('inventory_status');
+      }
     }
   } catch (err) {
     console.error("Context aggregation failed:", err);
@@ -66,7 +86,7 @@ export const queryAi = asyncHandler(async (req, res) => {
 
   if (genAI) {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
       const prompt = `You are an expert Ayurvedic clinical assistant inside the DhiGraph HMS. Provide clinical decision support based PRECISELY on the patient context provided. Do not invent medical facts. Format cleanly.
 
 PATIENT CONTEXT:
@@ -130,7 +150,7 @@ export const transcribeScribble = asyncHandler(async (req, res) => {
   try {
     const base64Data = image_data.replace(/^data:image\/[a-z]+;base64,/, "");
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     const prompt = "Please act as an expert medical transcriptionist. Analyze this handwritten clinical note/scribble from a doctor and accurately transcribe the text. If there are clear sections (like vitals, symptoms, diagnosis, treatment), please structure them. Only return the transcribed text, nothing else. If it is completely unreadable or blank, just reply with 'No readable handwriting detected.'";
 
     const imageParts = [

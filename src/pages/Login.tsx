@@ -12,8 +12,20 @@ export default function Login() {
     const [name, setName] = useState("");
     const [password, setPassword] = useState("");
 
+    const ROLE_PASSWORDS: Record<string, string> = {
+        admin: "admin123",
+        doctor: "doctor123",
+        therapist: "therapist123"
+    };
+
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (password !== ROLE_PASSWORDS[role]) {
+            alert(`Wrong Password for ${role.toUpperCase()} role. Access Restricted.`);
+            return;
+        }
+
         // Simulate login - direct to dashboard, passing role and name
         navigate("/dashboard", { state: { role, name } });
     };
@@ -67,7 +79,7 @@ export default function Login() {
                                 {[
                                     { id: "admin", icon: Shield, label: "Admin" },
                                     { id: "doctor", icon: Stethoscope, label: "Doctor" },
-                                    { id: "staff", icon: User, label: "Staff" }
+                                    { id: "therapist", icon: User, label: "Therapist" }
                                 ].map((r) => (
                                     <button
                                         key={r.id}
