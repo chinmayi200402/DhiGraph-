@@ -49,49 +49,7 @@ node server.js
 
 <h2>⚙️ Architecture:</h2>
 
-```mermaid
-graph TD
-    %% Styling
-    classDef frontend fill:#61DAFB,stroke:#20232a,stroke-width:2px,color:#000
-    classDef backend fill:#6DA55F,stroke:#2b3e30,stroke-width:2px,color:#fff
-    classDef db fill:#4ea94b,stroke:#2e6b2c,stroke-width:2px,color:#fff
-    classDef ai fill:#BB86FC,stroke:#3b0086,stroke-width:2px,color:#000
-    classDef hw fill:#FFB300,stroke:#8c6200,stroke-width:2px,color:#000
-
-    %% Components
-    subgraph Client Side["Client Interface (React / Vite)"]
-        UI["React UI Components<br/>(Tailwind, Shadcn)"]
-        NFC["NFC Scanner Interface"]
-    end
-
-    subgraph Server Side["Backend API (Node.js / Express)"]
-        Router["Express Router"]
-        CTRL["Controllers<br/>(AI, Dashboard, Patients, Prakriti)"]
-        Router --> CTRL
-    end
-
-    subgraph Database Layer["Database"]
-        MongoDB[("MongoDB<br/>(Patient Records, Vitals)")]
-    end
-
-    subgraph External Services["External Services"]
-        Gemini["Gemini API<br/>(AI Transcription & Analysis)"]
-    end
-
-    %% Connections
-    UI -- "REST API (HTTP/JSON)" --> Router
-    NFC -- "Scans Tags" --> UI
-    CTRL -- "Reads/Writes" --> MongoDB
-    CTRL -- "Analyzes Data / Clinical Scribbles" --> Gemini
-
-    %% Apply Classes
-    class UI frontend;
-    class Router,CTRL backend;
-    class MongoDB db;
-    class Gemini ai;
-    class NFC hw;
-```
-
+<img src="./imgs/arch.png" alt="architecture-diagram" width="700" height="400">
  &nbsp;
 
 <h2>🚀 Future Enhancements:</h2>
