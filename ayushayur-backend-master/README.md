@@ -1,6 +1,6 @@
-# Ayushayur Backend API
+# DhiGraph Backend API
 
-Backend REST API for Ayushayur Hospital Management System built with Node.js, Express.js, and MongoDB.
+Backend REST API for DhiGraph Hospital Management System built with Node.js, Express.js, and MongoDB.
 
 ## Features
 
@@ -130,7 +130,7 @@ Authorization: Bearer <your-token>
 ## Project Structure
 
 ```
-ayushayur-backend/
+dhigraph-backend/
 ├── config/
 │   └── db.js
 ├── controllers/

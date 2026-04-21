@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://socialify.git.ci/chinmayi200402/ayushayur/image?description=1&font=Raleway&name=1&pattern=Charlie%20Brown&theme=Auto" alt="project-image">
+  <img src="https://socialify.git.ci/chinmayi200402/ayushayur/image?description=1&font=Raleway&name=1&pattern=Charlie%20Brown&theme=Auto" alt="DhiGraph project image">
 </p>
 
 <p align="center">
@@ -13,6 +13,8 @@
   &nbsp;
   <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="shields">
 </p>
+
+<h1 align="center">DhiGraph HMS</h1>
 
 <h2>🛠️ Installation Steps:</h2>
 
@@ -42,15 +44,16 @@ node server.js
 ```
 <br>
 
-<h2>📷 Project Screenshots:</h2>
+<h2>📷 Project Screenshot:</h2>
 
 <img src="./imgs/login_screen.png" alt="login-screenshot" width="700" height="400">
  &nbsp;
 
-<h2>⚙️ Architecture:</h2>
+<h2>⚙️ Technical Architecture Flow:</h2>
 
 <img src="./imgs/arch.png" alt="architecture-diagram" width="700" height="400">
- &nbsp;
+
+
 
 <h2>🚀 Future Enhancements:</h2>
 <ul>

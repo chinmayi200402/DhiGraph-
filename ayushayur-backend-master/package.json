@@ -1,7 +1,7 @@
 {
-  "name": "ayushayur-backend",
+  "name": "dhigraph-backend",
   "version": "1.0.0",
-  "description": "Backend API for Ayushayur Hospital Management System",
+  "description": "Backend API for DhiGraph Hospital Management System",
   "main": "server.js",
   "type": "module",
   "scripts": {
