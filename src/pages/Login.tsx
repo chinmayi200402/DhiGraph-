@@ -52,7 +52,7 @@ export default function Login() {
                         transition={{ duration: 0.5, type: "spring" }}
                         className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-xl shadow-primary/20 overflow-hidden border border-slate-100"
                     >
-                        <img src="/logo.png" alt="Adichunchanagiri AMC" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', '<span class=\"text-2xl font-bold text-slate-400\">AMC</span>'); }} />
+                        <img src="/logo.png" alt="Avinash Clinic Logo" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', '<span class=\"text-2xl font-bold text-slate-400\">AC</span>'); }} />
                     </motion.div>
                     <div>
                         <div className="relative inline-flex items-center justify-center py-6 px-10 mt-1 mb-2">
@@ -63,10 +63,10 @@ export default function Login() {
                         </div>
                         <div className="mt-3 px-4">
                             <p className="font-display text-lg md:text-xl font-bold text-foreground leading-tight uppercase tracking-wide">
-                                Adichunchanagiri Ayurveda Medical College
+                                Avinash Clinic
                             </p>
                             <p className="text-sm md:text-md text-primary font-semibold mt-1">
-                                Hospital and Research Centre
+                                Healing is an Art
                             </p>
                         </div>
                     </div>

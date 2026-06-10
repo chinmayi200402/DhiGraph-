@@ -222,9 +222,9 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
     
     // Header Branding
     doc.setFontSize(16);
-    doc.text("Adichunchanagiri Ayurveda Medical College", 20, 20);
+    doc.text("Avinash Clinic", 20, 20);
     doc.setFontSize(10);
-    doc.text("Hospital & Research Centre", 20, 26);
+    doc.text("Healing is an Art", 20, 26);
     doc.setFontSize(9);
     doc.text("Powered by DhiGraph", 160, 20);
 
@@ -277,7 +277,7 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
       <CardHeader className="flex flex-row items-center justify-between shrink-0 bg-white border-b sticky top-0 z-10 p-4">
          <CardTitle className="text-xl font-display flex items-center gap-3">
            <img src="/logo.png" alt="Hospital Logo" className="w-8 h-8 rounded-full border border-slate-200" />
-           <span className="text-slate-800">{fullScreenMode ? `${department ? department + ' Case Sheet' : 'Case Study Records'}` : `Case Sheet`} - AAMCHRC</span>
+           <span className="text-slate-800">{fullScreenMode ? `${department ? department + ' Case Sheet' : 'Case Study Records'}` : `Case Sheet`} - Avinash Clinic</span>
            <div className="flex items-center ml-4 pl-4 border-l border-slate-200 text-slate-500 gap-2">
              <Brain className="w-5 h-5 text-primary" />
              <span className="text-sm uppercase font-extrabold tracking-widest text-primary drop-shadow-sm">DhiGraph</span>

@@ -53,13 +53,16 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   const sidebarContent = (
     <>
       <div className="flex flex-col gap-2 p-4 md:p-6 border-b border-sidebar-border relative">
-        <div className="flex items-center gap-3">
+        <div className={cn("flex items-center transition-all duration-200", collapsed && !isMobile ? "gap-0 justify-center" : "gap-4")}>
           <motion.div
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
-            className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden border border-slate-100"
+            className={cn(
+              "rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden border border-slate-100 transition-all duration-200",
+              collapsed && !isMobile ? "w-10 h-10" : "w-16 h-16"
+            )}
           >
-            <img src="/logo.png" alt="Adichunchanagiri AMC" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', '<span class=\"text-xs font-bold text-slate-400\">AMC</span>'); }} />
+            <img src="/logo.png" alt="Avinash Clinic" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', '<span class=\"text-xs font-bold text-slate-400\">AC</span>'); }} />
           </motion.div>
           <AnimatePresence>
             {(!collapsed || isMobile) && (
@@ -68,12 +71,12 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden"
+                className="overflow-hidden flex flex-col justify-center h-16"
               >
-                <h1 className="font-display text-lg font-bold text-white leading-tight drop-shadow-md">
-                  Adichunchanagiri
+                <h1 className="font-display text-xl font-bold text-white leading-none drop-shadow-md">
+                  Avinash Clinic
                 </h1>
-                <p className="text-[11px] font-bold text-[#e1b15c] tracking-widest mt-0.5">AAMCHRC</p>
+                <p className="text-[10px] font-bold text-[#e1b15c] tracking-wider mt-1.5 uppercase">Healing is an Art</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -96,7 +99,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
               className="pt-2"
             >
               <p className="text-[11px] uppercase tracking-wider text-white/95 leading-normal font-bold text-center border-t border-sidebar-border/50 pt-3 mt-2 drop-shadow-sm">
-                Adichunchanagiri Ayurveda Medical College Hospital & Research Centre
+                Avinash Clinic • Healing is an Art
               </p>
             </motion.div>
           )}

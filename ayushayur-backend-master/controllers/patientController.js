@@ -54,6 +54,7 @@ export const getPatients = asyncHandler(async (req, res) => {
   // Enrich patients with prakriti and status
   const enrichedPatients = patients.map((p) => ({
     ...p.toObject(),
+    id: p._id.toString(),
     prakriti: prakritiMap.get(p._id.toString()) || null,
     status: statusMap.get(p._id.toString()) || 'New',
   }));

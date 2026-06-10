@@ -64,20 +64,23 @@ export default function Dashboard() {
             >
               <img 
                 src="/logo.png" 
-                alt="Adichunchanagiri Ayurvedic Medical College Logo" 
+                alt="Avinash Clinic Logo" 
                 className="w-full h-full object-cover"
               />
             </motion.div>
             <h1 className="font-display text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-highlight drop-shadow-sm px-4 max-w-4xl leading-tight">
-              Adichunchanagiri Ayurvedic Medical College Hospital & Research Centre
+              Avinash Clinic
             </h1>
+            <p className="text-sm md:text-md text-primary font-semibold tracking-wide uppercase -mt-2">
+              Healing is an Art
+            </p>
           </div>
           <div className="mt-2">
             <p className="font-display text-lg md:text-xl font-semibold text-foreground">
               Welcome back, <span className="text-gradient">{displayName}</span>
             </p>
             <p className="text-sm md:text-base text-muted-foreground">
-              Here's what's happening at your Ayurvedic center today
+              Here's what's happening at your clinic today
             </p>
           </div>
         </motion.div>

@@ -67,13 +67,13 @@ export function DischargePrintView({ patient }: DischargePrintViewProps) {
       {/* Header */}
       <div className="flex flex-col items-center text-center border-b-2 border-[#2D5A27] pb-6 mb-6">
         <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-lg overflow-hidden border border-[#2D5A27]/20 shrink-0 mb-4 mt-2">
-          <img src="/logo.png" alt="AMC Logo" className="w-full h-full object-cover" />
+          <img src="/logo.png" alt="Avinash Clinic Logo" className="w-full h-full object-cover" />
         </div>
         
         <h1 style={{ fontFamily: "'Playfair Display', serif" }} className="text-2xl font-bold text-[#2D5A27] leading-tight">
-          Adichunchanagiri Ayurveda Medical College
+          Avinash Clinic
         </h1>
-        <p className="text-md font-semibold text-[#8B5E3C] mt-1.5 mb-1">Hospital & Research Centre</p>
+        <p className="text-md font-semibold text-[#8B5E3C] mt-1.5 mb-1">Healing is an Art</p>
         
         <div className="flex items-center justify-center gap-2 mt-4 pt-3 border-t border-[#2D5A27]/20 w-64">
           <Brain className="w-5 h-5 text-[#2D5A27]" />
@@ -267,14 +267,14 @@ export function DischargePrintView({ patient }: DischargePrintViewProps) {
         <div className="text-center">
           <div className="h-16 border-b border-[#8B5E3C]/50 mb-2"></div>
           <p className="text-sm font-medium">Medical Superintendent</p>
-          <p className="text-xs text-[#8B5E3C]">AAMCHRC</p>
+          <p className="text-xs text-[#8B5E3C]">Avinash Clinic</p>
         </div>
       </div>
 
       {/* Footer */}
       <div className="mt-8 pt-4 border-t border-[#2D5A27]/20 text-center text-xs text-[#8B5E3C]">
         <p>This is a computer-generated discharge summary from DhiGraph Clinical System.</p>
-        <p className="mt-1">For any queries, please contact: info@aamchrc.org | +91 1234 567890</p>
+        <p className="mt-1">For any queries, please contact: info@avinashclinic.com | +91 1234 567890</p>
       </div>
     </div>
   );

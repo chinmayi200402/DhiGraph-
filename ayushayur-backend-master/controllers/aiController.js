@@ -7,10 +7,40 @@ import Scribble from '../models/Scribble.js';
 import Inventory from '../models/Inventory.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+const getAssistantApiKey = () => {
+  // Gemini SDK requires a Gemini API key; prioritize GEMINI_API_KEY.
+  return process.env.GEMINI_API_KEY || process.env.AI_ASSISTANT_API_KEY || null;
+};
+
+const createGeminiClient = () => {
+  const apiKey = getAssistantApiKey();
+  if (!apiKey) return null;
+  return new GoogleGenerativeAI(apiKey);
+};
+
+const mapGeminiErrorMessage = (err) => {
+  const raw = err?.message || "Unknown LLM integration failure.";
+  const lowered = raw.toLowerCase();
+
+  if (lowered.includes("api_key_invalid") || lowered.includes("api key not valid")) {
+    return "Gemini API key is invalid. Update GEMINI_API_KEY in .env and restart the server.";
+  }
+
+  if (lowered.includes("reported as leaked") || lowered.includes("api key was reported as leaked")) {
+    return "Gemini API key has been revoked as leaked. Create a new key in Google AI Studio, update GEMINI_API_KEY in .env, and restart the server.";
+  }
+
+  if (lowered.includes("403 forbidden")) {
+    return "Gemini request is forbidden. Verify key permissions, restrictions, and billing/project access.";
+  }
+
+  return raw;
+};
+
 // Simulate RAG call or execute real OpenAI call
 export const queryAi = asyncHandler(async (req, res) => {
   // Initialize Gemini dynamically so dotenv processes .env before this runs
-  const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+  const genAI = createGeminiClient();
 
   const { patient_id, user_id, query } = req.body;
 
@@ -100,11 +130,11 @@ ${query}`;
       responseText = response.text();
     } catch (llmErr) {
       console.error("Gemini API Failed:", llmErr);
-      responseText = "Error: " + (llmErr.message || "Unknown LLM integration failure.");
+      responseText = "Error: " + mapGeminiErrorMessage(llmErr);
     }
   } else {
     // Elegant fallback Pseudo-RAG
-    responseText = `[RAG Simulation Mode Active]\n\nBased on your database query for **${patientName}**, I have extracted the following context vectors:\n\n${compiledContext}\n\n**Note**: To enable real intelligence insights, please ensure \`GEMINI_API_KEY\` is active inside \`.env\`.`;
+    responseText = `[RAG Simulation Mode Active]\n\nBased on your database query for **${patientName}**, I have extracted the following context vectors:\n\n${compiledContext}\n\n**Note**: To enable real intelligence insights, please ensure \`AI_ASSISTANT_API_KEY\` (or \`GEMINI_API_KEY\`) is active inside \`.env\`.`;
   }
 
 
@@ -142,9 +172,9 @@ export const transcribeScribble = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'No image data provided' });
   }
 
-  const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+  const genAI = createGeminiClient();
   if (!genAI) {
-    return res.status(500).json({ error: 'Gemini API not configured' });
+    return res.status(500).json({ error: 'Assistant API key not configured. Set AI_ASSISTANT_API_KEY or GEMINI_API_KEY.' });
   }
 
   try {
@@ -169,6 +199,6 @@ export const transcribeScribble = asyncHandler(async (req, res) => {
     res.status(200).json({ transcription: text });
   } catch (error) {
     console.error("Gemini Transcription failed:", error);
-    res.status(500).json({ error: 'Failed to transcribe image' });
+    res.status(500).json({ error: mapGeminiErrorMessage(error) });
   }
 });

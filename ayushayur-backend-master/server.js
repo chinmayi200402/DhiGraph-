@@ -25,6 +25,28 @@ dotenv.config();
 
 const app = express();
 
+const validateAiConfiguration = () => {
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  const fallbackKey = process.env.AI_ASSISTANT_API_KEY?.trim();
+  const activeKey = geminiKey || fallbackKey;
+
+  if (!activeKey) {
+    console.warn('[AI CONFIG] Missing key. Set GEMINI_API_KEY in .env for AI routes to work.');
+    return;
+  }
+
+  if (!geminiKey && fallbackKey) {
+    console.warn('[AI CONFIG] Using AI_ASSISTANT_API_KEY fallback. Prefer GEMINI_API_KEY for Gemini SDK calls.');
+  }
+
+  // Gemini API keys commonly begin with "AIza". Warn if the provided key looks incompatible.
+  if (activeKey && !activeKey.startsWith('AIza')) {
+    console.warn('[AI CONFIG] Active key does not look like a Gemini API key (expected prefix "AIza"). Requests may fail.');
+  }
+};
+
+validateAiConfiguration();
+
 // Middleware
 // CORS configuration - allow all origins in development
 const corsOptions = {
