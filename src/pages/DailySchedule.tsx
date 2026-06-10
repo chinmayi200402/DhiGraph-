@@ -55,6 +55,8 @@ const statusStyles: Record<string, { bg: string, border: string, icon: any, icon
 
 const rooms = ["Room 101", "Room 102", "Room 103"];
 
+import { API_BASE_URL } from "@/config/api";
+
 export default function DailySchedule() {
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
@@ -66,7 +68,7 @@ export default function DailySchedule() {
   const { data: scheduleItems = [], isLoading } = useQuery({
     queryKey: ["appointments", "today"],
     queryFn: async () => {
-      const res = await fetch("http://localhost:5000/api/appointments");
+      const res = await fetch(`${API_BASE_URL}/api/appointments`);
       if (!res.ok) throw new Error("Failed to load appointments");
       
       const allAppts: any[] = await res.json();

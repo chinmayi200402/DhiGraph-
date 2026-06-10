@@ -36,6 +36,8 @@ interface PatientData {
   followUp: string;
 }
 
+import { API_BASE_URL } from "@/config/api";
+
 export default function DischargeSummary() {
   const [patientsData, setPatientsData] = useState<PatientData[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
@@ -47,7 +49,7 @@ export default function DischargeSummary() {
     const fetchPatients = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch("http://localhost:5000/api/patients");
+        const res = await fetch(`${API_BASE_URL}/api/patients`);
         if (!res.ok) throw new Error("Failed to fetch patients");
         const data = await res.json();
         

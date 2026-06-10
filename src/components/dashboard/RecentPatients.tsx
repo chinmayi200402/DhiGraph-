@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 
+import { API_BASE_URL } from "@/config/api";
+
 const statusColors = {
   "In Treatment": "bg-primary/20 text-primary",
   "Scheduled": "bg-highlight/20 text-highlight",
@@ -29,7 +31,7 @@ export function RecentPatients() {
   const { data: patients = [], isLoading } = useQuery({
     queryKey: ["recent-patients"],
     queryFn: async () => {
-      const res = await fetch("http://localhost:5000/api/patients");
+      const res = await fetch(`${API_BASE_URL}/api/patients`);
       if (!res.ok) {
         throw new Error("Failed to load patients");
       }

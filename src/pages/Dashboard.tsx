@@ -7,6 +7,7 @@ import { RecentPatients } from "@/components/dashboard/RecentPatients";
 import { TodaySchedule } from "@/components/dashboard/TodaySchedule";
 import { InventoryAlert } from "@/components/dashboard/InventoryAlert";
 import { useQuery } from "@tanstack/react-query";
+import { API_BASE_URL } from "@/config/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function Dashboard() {
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
-      const res = await fetch("http://localhost:5000/api/dashboard/stats");
+      const res = await fetch(`${API_BASE_URL}/api/dashboard/stats`);
       if (!res.ok) {
         throw new Error("Failed to load dashboard stats");
       }

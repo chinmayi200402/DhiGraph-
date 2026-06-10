@@ -245,13 +245,15 @@ const VATA_TOTAL = 32;
 const PITTA_TOTAL = 32;
 const KAPHA_TOTAL = 32;
 
+import { API_BASE_URL } from "@/config/api";
+
 export default function Prakriti() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
   const patientId = searchParams.get("patientId");
   const patientName = searchParams.get("patientName");
-
+ 
   const [currentCategory, setCurrentCategory] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
   const [showResults, setShowResults] = useState(false);
@@ -363,7 +365,7 @@ export default function Prakriti() {
         }
       });
 
-      const res = await fetch("http://localhost:5000/api/prakriti", {
+      const res = await fetch(`${API_BASE_URL}/api/prakriti`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

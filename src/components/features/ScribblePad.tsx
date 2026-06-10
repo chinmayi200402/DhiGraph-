@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Save, Eraser, PenIcon, Trash2, Undo2, FileDown, Brain, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
+import { API_BASE_URL } from "@/config/api";
 
 
 interface ScribblePadProps {
@@ -152,7 +153,7 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
 
     try {
       // Assuming a backend API running on same origin or properly proxied
-      const res = await fetch('http://localhost:5000/api/scribbles', {
+      const res = await fetch(`${API_BASE_URL}/api/scribbles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patient_id: patientId, doctor_id: doctorId, image_data: imageData, notes })
@@ -194,7 +195,7 @@ const ScribblePad: React.FC<ScribblePadProps> = ({ patientId, doctorId, fullScre
     
     // Call our backend to transcribe the image via Gemini
     try {
-      const transcribeRes = await fetch('http://localhost:5000/api/ai/transcribe-scribble', {
+      const transcribeRes = await fetch(`${API_BASE_URL}/api/ai/transcribe-scribble`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image_data: imageData })

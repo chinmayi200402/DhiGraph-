@@ -5,6 +5,8 @@ import { Input } from '../ui/input';
 import { Bot, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { API_BASE_URL } from "@/config/api";
+
 interface AiChatbotProps {
   patientId: string;
   userId: string;
@@ -23,7 +25,7 @@ const AiChatbot: React.FC<AiChatbotProps> = ({ patientId, userId }) => {
     setQuery('');
 
     try {
-      const res = await fetch('http://localhost:5000/api/ai/query', {
+      const res = await fetch(`${API_BASE_URL}/api/ai/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patient_id: patientId, user_id: userId, query })

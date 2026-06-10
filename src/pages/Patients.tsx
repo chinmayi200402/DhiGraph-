@@ -16,6 +16,8 @@ type Patient = Tables<"patients"> & {
   status?: "In Treatment" | "Scheduled" | "Completed" | "New";
 };
 
+import { API_BASE_URL } from "@/config/api";
+
 export default function Patients() {
   const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -30,7 +32,7 @@ export default function Patients() {
   const fetchPatients = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/patients");
+      const res = await fetch(`${API_BASE_URL}/api/patients`);
       if (!res.ok) {
         throw new Error("Failed to load patients");
       }
@@ -57,7 +59,7 @@ export default function Patients() {
   const handleAddPatient = async (formData: PatientFormData) => {
     setIsSaving(true);
     try {
-      const res = await fetch("http://localhost:5000/api/patients", {
+      const res = await fetch(`${API_BASE_URL}/api/patients`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

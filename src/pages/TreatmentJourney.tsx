@@ -27,6 +27,8 @@ interface DayPlan {
   completed: boolean;
 }
 
+import { API_BASE_URL } from "@/config/api";
+
 export default function TreatmentJourney() {
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
@@ -35,7 +37,7 @@ export default function TreatmentJourney() {
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: async () => {
-      const res = await fetch("http://localhost:5000/api/patients");
+      const res = await fetch(`${API_BASE_URL}/api/patients`);
       if (!res.ok) throw new Error("Failed to load patients");
       return res.json();
     },
@@ -44,7 +46,7 @@ export default function TreatmentJourney() {
   const { data: journey = [] } = useQuery({
     queryKey: ["treatment-journey", selectedPatientId],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:5000/api/treatment-journey?patient_id=${selectedPatientId}`);
+      const res = await fetch(`${API_BASE_URL}/api/treatment-journey?patient_id=${selectedPatientId}`);
       if (!res.ok) throw new Error("Failed to load journey");
       return res.json();
     },
@@ -54,7 +56,7 @@ export default function TreatmentJourney() {
   const completeSessionMutation = useMutation({
     mutationFn: async ({ id, dayIndex }: { id: string; dayIndex: number }) => {
       // API normally
-      const res = await fetch(`http://localhost:5000/api/treatment-journey/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/treatment-journey/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_completed: true, completed_at: new Date() }),

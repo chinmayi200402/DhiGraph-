@@ -29,6 +29,8 @@ const categoryColors = {
   Arishtam: "bg-muted text-muted-foreground border-border",
 };
 
+import { API_BASE_URL } from "@/config/api";
+
 export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -38,7 +40,7 @@ export default function Inventory() {
   const { data: inventoryItems = [], isLoading } = useQuery({
     queryKey: ["inventory"],
     queryFn: async () => {
-      const res = await fetch("http://localhost:5000/api/inventory");
+      const res = await fetch(`${API_BASE_URL}/api/inventory`);
       if (!res.ok) throw new Error("Failed to load inventory");
       return res.json() as Promise<InventoryItem[]>;
     },
@@ -46,7 +48,7 @@ export default function Inventory() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, quantity }: { id: string, quantity: number }) => {
-      const res = await fetch(`http://localhost:5000/api/inventory/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/inventory/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quantity })
@@ -68,7 +70,7 @@ export default function Inventory() {
         { item_name: "Ashwagandha Churna", category: "Churna", quantity: 72, min_stock_level: 30, unit: "kg" }
       ];
       for (const item of items) {
-        await fetch("http://localhost:5000/api/inventory", {
+        await fetch(`${API_BASE_URL}/api/inventory`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(item)

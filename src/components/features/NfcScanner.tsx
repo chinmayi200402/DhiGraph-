@@ -8,6 +8,8 @@ interface NfcScannerProps {
   onPatientFound: (patient: any) => void;
 }
 
+import { API_BASE_URL } from "@/config/api";
+
 const NfcScanner: React.FC<NfcScannerProps> = ({ onPatientFound }) => {
   const [scanning, setScanning] = useState(false);
 
@@ -38,7 +40,7 @@ const NfcScanner: React.FC<NfcScannerProps> = ({ onPatientFound }) => {
 
   const fetchPatientByNfc = async (tagId: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/patients/nfc/${tagId}`);
+      const res = await fetch(`${API_BASE_URL}/api/patients/nfc/${tagId}`);
       if (!res.ok) {
         throw new Error('Patient not found');
       }

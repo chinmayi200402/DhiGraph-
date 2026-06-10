@@ -3,6 +3,8 @@ import { AlertTriangle, Package, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
+import { API_BASE_URL } from "@/config/api";
+
 export function InventoryAlert() {
   const navigate = useNavigate();
 
@@ -10,7 +12,7 @@ export function InventoryAlert() {
     queryKey: ["low-stock-inventory"],
     queryFn: async () => {
       const res = await fetch(
-        "http://localhost:5000/api/inventory?low_stock=true"
+        `${API_BASE_URL}/api/inventory?low_stock=true`
       );
       if (!res.ok) {
         throw new Error("Failed to load inventory");
